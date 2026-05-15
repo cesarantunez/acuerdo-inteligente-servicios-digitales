@@ -1,0 +1,152 @@
+{
+  "header": {
+    "title": "Acuerdo Inteligente",
+    "subtitle": "Servicios Digitales",
+    "themeAria": "Cambiar tema",
+    "langAria": "Cambiar idioma"
+  },
+  "stepper": {
+    "client": "Cliente",
+    "project": "Proyecto",
+    "payment": "Pagos",
+    "contract": "Contrato",
+    "signature": "Firma"
+  },
+  "step1": {
+    "title": "Datos del Cliente",
+    "subtitle": "Información de quien contrata el servicio.",
+    "client": {
+      "name": "Nombre completo *",
+      "namePh": "Ej: Juan Pérez",
+      "company": "Empresa",
+      "companyPh": "Nombre de empresa (opcional)",
+      "email": "Email *",
+      "emailPh": "cliente@correo.com",
+      "phone": "Teléfono",
+      "phonePh": "+1 555 555 5555",
+      "address": "Dirección",
+      "addressPh": "Calle, ciudad, país",
+      "id": "Identificación (DNI / RFC / Cédula)",
+      "idPh": "Opcional, pero recomendado"
+    },
+    "providerTitle": "Datos del Proveedor (tú)",
+    "provider": {
+      "name": "Tu nombre / empresa *",
+      "namePh": "Ej: Estudio Creativo SAS",
+      "email": "Email *",
+      "emailPh": "hola@tuempresa.com",
+      "phone": "Teléfono",
+      "phonePh": "+1 555 111 2222",
+      "id": "Identificación fiscal",
+      "idPh": "RFC / NIT / Tax ID"
+    }
+  },
+  "step2": {
+    "title": "Detalles del Proyecto",
+    "subtitle": "Qué se va a desarrollar y bajo qué condiciones.",
+    "type": "Tipo de proyecto *",
+    "typeSelect": "Seleccionar...",
+    "types": {
+      "web": "Página web",
+      "mobile": "Aplicación móvil",
+      "saas": "Aplicación web / SaaS",
+      "automation": "Automatización / Integración",
+      "ecommerce": "E-commerce",
+      "branding": "Branding / Diseño",
+      "ai": "Inteligencia Artificial",
+      "other": "Otro"
+    },
+    "name": "Nombre del proyecto",
+    "namePh": "Ej: Plataforma Uber-AI",
+    "description": "Descripción del proyecto *",
+    "descriptionPh": "Describe con claridad qué se desarrollará...",
+    "features": "Funcionalidades / Entregables (una por línea) *",
+    "featuresPh": "Login con email\nPanel de administración\nIntegración con Stripe\nNotificaciones push",
+    "startDate": "Fecha de inicio",
+    "endDate": "Fecha estimada de entrega",
+    "phases": "Fases del proyecto (opcional, una por línea)",
+    "phasesPh": "Fase 1: Diseño\nFase 2: Desarrollo\nFase 3: QA y lanzamiento",
+    "extrasTitle": "Extras",
+    "extras": {
+      "support": "Incluye soporte post-entrega",
+      "supportDays": "Días de soporte incluidos",
+      "supportDaysPh": "30",
+      "revisions": "Revisiones incluidas",
+      "revisionsPh": "3",
+      "hosting": "Incluye hosting / dominio"
+    }
+  },
+  "step3": {
+    "title": "Condiciones de Pago",
+    "subtitle": "Define montos, fechas y método de pago.",
+    "currency": "Moneda",
+    "totalPrice": "Precio total *",
+    "totalPricePh": "5000",
+    "initialPercent": "Porcentaje inicial (%)",
+    "initialAmount": "Pago inicial calculado",
+    "remainingAmount": "Saldo restante",
+    "method": "Método de pago *",
+    "methodSelect": "Seleccionar...",
+    "methods": {
+      "stripe": "Stripe",
+      "paypal": "PayPal",
+      "zelle": "Zelle",
+      "bank": "Transferencia bancaria",
+      "wise": "Wise",
+      "crypto": "Crypto (USDT/BTC)",
+      "cash": "Efectivo"
+    },
+    "details": "Detalles o datos de pago",
+    "detailsPh": "Cuenta, email de PayPal, link de Stripe, etc."
+  },
+  "step4": {
+    "title": "Vista Previa del Contrato",
+    "subtitle": "Revisa el documento bilingüe (español e inglés) generado automáticamente."
+  },
+  "step5": {
+    "title": "Firma Digital",
+    "subtitle": "Firma con el dedo (móvil) o mouse (desktop).",
+    "clientSig": "Firma del Cliente",
+    "providerSig": "Firma del Proveedor",
+    "sigName": "Nombre de quien firma",
+    "sigNamePh": "Nombre completo",
+    "prevailing": {
+      "title": "Idioma prevaleciente",
+      "help": "Este contrato se firma en formato bilingüe. Indica qué idioma prevalecerá en caso de discrepancia legal entre ambas versiones.",
+      "spanish": "Español",
+      "spanishHelp": "La versión en español prevalece en disputas",
+      "english": "English",
+      "englishHelp": "The English version prevails in disputes",
+      "confirmEs": "Has seleccionado que la versión en ESPAÑOL prevalecerá.",
+      "confirmEn": "Has seleccionado que la versión en INGLÉS prevalecerá."
+    }
+  },
+  "buttons": {
+    "next": "Siguiente →",
+    "prev": "← Atrás",
+    "finish": "Finalizar",
+    "downloadPdf": "Descargar PDF firmado",
+    "saveDraft": "Guardar borrador",
+    "clear": "Limpiar"
+  },
+  "toast": {
+    "draftSaved": "Borrador guardado",
+    "draftFailed": "No se pudo guardar",
+    "fillRequired": "Completa los campos obligatorios",
+    "selectProject": "Selecciona el tipo de proyecto",
+    "describeProject": "Describe el proyecto",
+    "addFeature": "Agrega al menos una funcionalidad",
+    "enterPrice": "Ingresa el precio total",
+    "selectPayment": "Selecciona método de pago",
+    "generating": "Generando PDF...",
+    "pdfDownloaded": "PDF descargado",
+    "pdfError": "Error generando PDF",
+    "libsMissing": "Librerías no cargadas. Revisa tu conexión a internet."
+  },
+  "contract": {
+    "title": "Contrato de Prestación de Servicios Digitales",
+    "generatedOn": "Documento generado el {date}",
+    "disclaimerTitle": "Aviso legal",
+    "disclaimer": "Este contrato bilingüe ha sido preparado con el mejor esfuerzo para reflejar los mismos derechos y obligaciones en ambos idiomas. Para contratos superiores a $15,000 USD o industrias reguladas (salud, fintech, gobierno), se recomienda firmemente la revisión legal en la jurisdicción aplicable antes de firmar."
+  }
+}

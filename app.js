@@ -1,6 +1,6 @@
 /* =========================================================
    Acuerdo Inteligente de Servicios Digitales
-   PWA — wizard + contrato + firma digital + PDF
+   PWA — wizard + contrato bilingüe ES/EN + firma + PDF
 ========================================================= */
 
 const TOTAL_STEPS = 5;
@@ -10,8 +10,36 @@ let sigClientPad, sigProviderPad;
 const $ = (sel, parent = document) => parent.querySelector(sel);
 const $$ = (sel, parent = document) => [...parent.querySelectorAll(sel)];
 
+/* -------- Helpers compartidos (expuestos para clauses-*.js) -------- */
+function esc(s) {
+  return (s == null ? "" : String(s)).replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch]));
+}
+function formatMoney(n, cur = "USD", localeHint) {
+  const loc = localeHint === "en" ? "en-US" : (window.I18N && window.I18N.locale === "en" ? "en-US" : "es-MX");
+  try { return new Intl.NumberFormat(loc, { style: "currency", currency: cur }).format(+n || 0); }
+  catch { return `${cur} ${(+n || 0).toFixed(2)}`; }
+}
+function formatDate(d, localeHint) {
+  if (!d) return "___________";
+  const loc = localeHint === "en" ? "en-US" : (localeHint === "es" ? "es-ES" : (window.I18N && window.I18N.locale === "en" ? "en-US" : "es-ES"));
+  try {
+    return new Date(d + "T00:00:00").toLocaleDateString(loc, { year: "numeric", month: "long", day: "numeric" });
+  } catch { return d; }
+}
+function listify(text) {
+  const items = (text || "").split("\n").map((t) => t.trim()).filter(Boolean);
+  if (!items.length) return `<li><em>${(window.I18N && window.I18N.locale === "en") ? "Not defined" : "Sin definir"}</em></li>`;
+  return items.map((i) => `<li>${esc(i)}</li>`).join("");
+}
+window.AI = { esc, formatMoney, formatDate, listify };
+
 /* -------- State & persistence -------- */
-const STORAGE_KEY = "acuerdoInteligente.draft.v1";
+const STORAGE_KEY = "acuerdoInteligente.draft.v2";
+
+function getPrevailingLanguage() {
+  const checked = document.querySelector('input[name="prevailing"]:checked');
+  return checked ? checked.value : "es";
+}
 
 function collectData() {
   return {
@@ -55,6 +83,9 @@ function collectData() {
       clientName: $("#sigClientName").value.trim(),
       providerName: $("#sigProviderName").value.trim(),
     },
+    metadata: {
+      prevailingLanguage: getPrevailingLanguage(),
+    },
   };
 }
 
@@ -68,14 +99,19 @@ function applyData(d) {
   if (d.extras) { check("extraSupport", d.extras.support); set("supportDays", d.extras.supportDays); set("revisions", d.extras.revisions); check("extraHosting", d.extras.hosting); }
   if (d.payment) { set("currency", d.payment.currency || "USD"); set("totalPrice", d.payment.total || ""); set("initialPercent", d.payment.initialPercent ?? 50); set("paymentMethod", d.payment.method); set("paymentDetails", d.payment.details); }
   if (d.signatures) { set("sigClientName", d.signatures.clientName); set("sigProviderName", d.signatures.providerName); }
+  if (d.metadata && d.metadata.prevailingLanguage) {
+    const radio = document.querySelector(`input[name="prevailing"][value="${d.metadata.prevailingLanguage}"]`);
+    if (radio) radio.checked = true;
+    updatePrevailingConfirm();
+  }
   recalcPayment();
 }
 
 function saveDraft() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(collectData()));
-    toast("Borrador guardado", "success");
-  } catch (e) { toast("No se pudo guardar", "error"); }
+    toast(I18N.t("toast.draftSaved"), "success");
+  } catch (e) { toast(I18N.t("toast.draftFailed"), "error"); }
 }
 
 function loadDraft() {
@@ -99,14 +135,14 @@ function toast(msg, type = "") {
 function goToStep(n) {
   n = Math.max(1, Math.min(TOTAL_STEPS, n));
   currentStep = n;
-  $$(".panel").forEach(p => p.classList.toggle("active", +p.dataset.panel === n));
-  $$(".step").forEach(s => {
+  $$(".panel").forEach((p) => p.classList.toggle("active", +p.dataset.panel === n));
+  $$(".step").forEach((s) => {
     const sn = +s.dataset.step;
     s.classList.toggle("active", sn === n);
     s.classList.toggle("done", sn < n);
   });
   $("#btnPrev").disabled = n === 1;
-  $("#btnNext").textContent = n === TOTAL_STEPS ? "Finalizar" : "Siguiente →";
+  $("#btnNext").textContent = n === TOTAL_STEPS ? I18N.t("buttons.finish") : I18N.t("buttons.next");
   $("#progressBar").style.width = (n / TOTAL_STEPS * 100) + "%";
 
   if (n === 4) renderContract();
@@ -119,26 +155,22 @@ function validateStep(n) {
     const required = ["clientName", "clientEmail", "providerName", "providerEmail"];
     for (const id of required) {
       const el = document.getElementById(id);
-      if (!el.value.trim()) { el.focus(); toast("Completa los campos obligatorios", "error"); return false; }
+      if (!el.value.trim()) { el.focus(); toast(I18N.t("toast.fillRequired"), "error"); return false; }
     }
   }
   if (n === 2) {
-    if (!$("#projectType").value) { $("#projectType").focus(); toast("Selecciona el tipo de proyecto", "error"); return false; }
-    if (!$("#projectDescription").value.trim()) { $("#projectDescription").focus(); toast("Describe el proyecto", "error"); return false; }
-    if (!$("#projectFeatures").value.trim()) { $("#projectFeatures").focus(); toast("Agrega al menos una funcionalidad", "error"); return false; }
+    if (!$("#projectType").value) { $("#projectType").focus(); toast(I18N.t("toast.selectProject"), "error"); return false; }
+    if (!$("#projectDescription").value.trim()) { $("#projectDescription").focus(); toast(I18N.t("toast.describeProject"), "error"); return false; }
+    if (!$("#projectFeatures").value.trim()) { $("#projectFeatures").focus(); toast(I18N.t("toast.addFeature"), "error"); return false; }
   }
   if (n === 3) {
-    if (!$("#totalPrice").value) { $("#totalPrice").focus(); toast("Ingresa el precio total", "error"); return false; }
-    if (!$("#paymentMethod").value) { $("#paymentMethod").focus(); toast("Selecciona método de pago", "error"); return false; }
+    if (!$("#totalPrice").value) { $("#totalPrice").focus(); toast(I18N.t("toast.enterPrice"), "error"); return false; }
+    if (!$("#paymentMethod").value) { $("#paymentMethod").focus(); toast(I18N.t("toast.selectPayment"), "error"); return false; }
   }
   return true;
 }
 
 /* -------- Payment calc -------- */
-function formatMoney(n, cur = "USD") {
-  try { return new Intl.NumberFormat("es-MX", { style: "currency", currency: cur }).format(n || 0); }
-  catch { return `${cur} ${(n || 0).toFixed(2)}`; }
-}
 function recalcPayment() {
   const total = parseFloat($("#totalPrice").value || 0);
   const pct = parseFloat($("#initialPercent").value || 0);
@@ -149,143 +181,101 @@ function recalcPayment() {
   $("#remainingAmount").value = formatMoney(remaining, cur);
 }
 
-/* -------- Contract rendering -------- */
-function formatDate(d) {
-  if (!d) return "___________";
-  try {
-    return new Date(d + "T00:00:00").toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
-  } catch { return d; }
-}
-function esc(s) {
-  return (s || "").replace(/[&<>]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch]));
-}
-function listify(text) {
-  const items = (text || "").split("\n").map(t => t.trim()).filter(Boolean);
-  if (!items.length) return "<li><em>Sin definir</em></li>";
-  return items.map(i => `<li>${esc(i)}</li>`).join("");
+/* -------- Prevailing language UI -------- */
+function updatePrevailingConfirm() {
+  const lang = getPrevailingLanguage();
+  const el = document.getElementById("prevailingConfirm");
+  if (!el) return;
+  el.textContent = I18N.t(lang === "en" ? "step5.prevailing.confirmEn" : "step5.prevailing.confirmEs");
+  el.dataset.i18n = lang === "en" ? "step5.prevailing.confirmEn" : "step5.prevailing.confirmEs";
 }
 
+/* -------- Contract rendering (bilingual) -------- */
 function renderContract() {
   const d = collectData();
-  const today = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
-  const cur = d.payment.currency || "USD";
-  const initial = (d.payment.total || 0) * ((d.payment.initialPercent || 0) / 100);
-  const remaining = (d.payment.total || 0) - initial;
+  const todayEs = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
+  const todayEn = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
-  const html = `
-    <h1>Contrato de Prestación de Servicios Digitales</h1>
-    <p class="doc-sub">Documento generado el ${today}</p>
+  const esClauses = window.CLAUSES_ES || [];
+  const enClauses = window.CLAUSES_EN || [];
 
-    <h2>1. Partes</h2>
-    <div class="parties">
-      <div class="party">
-        <h3>Proveedor</h3>
-        <p><strong>${esc(d.provider.name) || "—"}</strong></p>
-        ${d.provider.id ? `<p>ID fiscal: ${esc(d.provider.id)}</p>` : ""}
-        <p>${esc(d.provider.email) || ""}</p>
-        ${d.provider.phone ? `<p>${esc(d.provider.phone)}</p>` : ""}
+  let html = `
+    <div class="document-bilingual-header">
+      <div class="dbh-col">
+        <h1>Contrato de Prestación de Servicios Digitales</h1>
+        <p class="doc-sub">Documento generado el ${todayEs}</p>
       </div>
-      <div class="party">
-        <h3>Cliente</h3>
-        <p><strong>${esc(d.client.name) || "—"}</strong>${d.client.company ? ` — ${esc(d.client.company)}` : ""}</p>
-        ${d.client.id ? `<p>ID: ${esc(d.client.id)}</p>` : ""}
-        <p>${esc(d.client.email) || ""}</p>
-        ${d.client.phone ? `<p>${esc(d.client.phone)}</p>` : ""}
-        ${d.client.address ? `<p>${esc(d.client.address)}</p>` : ""}
+      <div class="dbh-col">
+        <h1>Digital Services Agreement</h1>
+        <p class="doc-sub">Document generated on ${todayEn}</p>
       </div>
     </div>
-    <p>Ambas partes reconocen tener capacidad legal suficiente para celebrar el presente contrato y manifiestan su consentimiento libre y voluntario.</p>
+    <div class="contract-bilingual">
+  `;
 
-    <h2>2. Objeto del Contrato</h2>
-    <p>El <strong>Proveedor</strong> se compromete a desarrollar y entregar al <strong>Cliente</strong> el siguiente servicio digital:</p>
-    <div class="highlight">
-      <p><strong>${esc(d.project.name) || esc(d.project.type) || "Proyecto digital"}</strong> — ${esc(d.project.type) || ""}</p>
-      <p>${esc(d.project.description) || "Sin descripción"}</p>
-    </div>
+  const len = Math.max(esClauses.length, enClauses.length);
+  for (let i = 0; i < len; i++) {
+    const es = esClauses[i] || { number: "", title: "", render: () => "" };
+    const en = enClauses[i] || { number: "", title: "", render: () => "" };
+    const cls = es.isHighlighted || en.isHighlighted ? "clause-row clause-highlighted" : "clause-row";
+    html += `
+      <div class="${cls}">
+        <div class="col col-es" lang="es">
+          <h2>${esc(es.number)}. ${esc(es.title)}</h2>
+          ${es.render(d)}
+        </div>
+        <div class="col col-en" lang="en">
+          <h2>${esc(en.number)}. ${esc(en.title)}</h2>
+          ${en.render(d)}
+        </div>
+      </div>`;
+  }
+  html += `</div>`;
 
-    <h2>3. Alcance y Entregables</h2>
-    <p>El proyecto incluye las siguientes funcionalidades y entregables:</p>
-    <ul>${listify(d.project.features)}</ul>
-    ${d.project.phases ? `<p><strong>Fases del proyecto:</strong></p><ul>${listify(d.project.phases)}</ul>` : ""}
-
-    <h2>4. Tiempos de Entrega</h2>
-    <p><strong>Fecha de inicio:</strong> ${formatDate(d.project.startDate)}</p>
-    <p><strong>Fecha estimada de entrega:</strong> ${formatDate(d.project.endDate)}</p>
-    <p>Los tiempos pueden variar si el Cliente retrasa la entrega de información, accesos o aprobaciones necesarias.</p>
-
-    <h2>5. Condiciones Económicas</h2>
-    <div class="highlight">
-      <p><strong>Valor total:</strong> ${formatMoney(d.payment.total, cur)}</p>
-      <p><strong>Pago inicial (${d.payment.initialPercent}%):</strong> ${formatMoney(initial, cur)}</p>
-      <p><strong>Saldo restante:</strong> ${formatMoney(remaining, cur)}</p>
-      <p><strong>Método de pago:</strong> ${esc(d.payment.method) || "—"}</p>
-      ${d.payment.details ? `<p><strong>Detalles:</strong> ${esc(d.payment.details)}</p>` : ""}
-    </div>
-    <p>El pago inicial se realiza al momento de firmar este contrato. El saldo restante se cubre al momento de la entrega final, salvo pacto distinto por escrito.</p>
-
-    <h2>6. Responsabilidades del Cliente</h2>
-    <ul>
-      <li>Proveer de manera oportuna la información, contenidos, accesos y credenciales necesarios.</li>
-      <li>Revisar y aprobar los avances dentro de los plazos acordados.</li>
-      <li>Cumplir con los pagos en las fechas establecidas.</li>
-      <li>Designar un único punto de contacto para la toma de decisiones.</li>
-    </ul>
-
-    <h2>7. Responsabilidades del Proveedor</h2>
-    <ul>
-      <li>Desarrollar el proyecto conforme al alcance acordado.</li>
-      <li>Mantener comunicación periódica sobre el progreso.</li>
-      <li>Entregar dentro del plazo estimado, salvo caso fortuito o fuerza mayor.</li>
-      <li>Guardar confidencialidad sobre la información del Cliente.</li>
-    </ul>
-
-    <h2>8. Revisiones y Cambios</h2>
-    <p>Se incluyen <strong>${d.extras.revisions || 0}</strong> ronda(s) de revisión dentro del alcance. Cualquier modificación adicional o cambio fuera del alcance inicial (<em>scope creep</em>) será cotizado de forma independiente y requerirá aprobación por escrito antes de ejecutarse.</p>
-
-    <h2>9. Soporte Post-Entrega</h2>
-    <p>${d.extras.support
-      ? `Se incluye soporte técnico gratuito durante <strong>${d.extras.supportDays || 30} día(s)</strong> posteriores a la entrega, limitado a corrección de errores originados en el desarrollo.`
-      : "No se incluye soporte post-entrega en el presente contrato. El soporte podrá contratarse de forma separada."}</p>
-
-    <h2>10. Hosting y Dominio</h2>
-    <p>${d.extras.hosting
-      ? "El hosting y/o dominio están incluidos conforme a los términos descritos en el alcance. La titularidad queda a nombre del Cliente."
-      : "El hosting y dominio no están incluidos y son responsabilidad exclusiva del Cliente."}</p>
-
-    <h2>11. Propiedad Intelectual</h2>
-    <p>Los derechos de propiedad intelectual sobre los entregables finales se transferirán al <strong>Cliente</strong> una vez completado el pago total del contrato. Hasta entonces, los derechos permanecen con el <strong>Proveedor</strong>. El Proveedor podrá incluir el proyecto en su portafolio salvo pacto expreso de confidencialidad.</p>
-
-    <h2>12. Cancelación</h2>
-    <p>En caso de cancelación por parte del Cliente, el pago inicial no será reembolsable por tratarse de trabajo ya iniciado. Si el Proveedor cancela sin causa justificada, devolverá la parte proporcional correspondiente al trabajo no entregado.</p>
-
-    <h2>13. Confidencialidad</h2>
-    <p>Ambas partes se comprometen a mantener en reserva toda información confidencial a la que accedan durante la ejecución del contrato, incluso después de su finalización.</p>
-
-    <h2>14. Ley Aplicable y Jurisdicción</h2>
-    <p>El presente contrato se rige por la legislación aplicable al domicilio del Proveedor. Cualquier controversia se resolverá preferentemente mediante acuerdo amistoso y, en su defecto, ante los tribunales competentes.</p>
-
-    <h2>15. Aceptación y Firmas</h2>
-    <p>Las partes declaran haber leído y aceptado cada una de las cláusulas del presente contrato, firmándolo en señal de conformidad.</p>
-
-    <div class="sign-row">
-      <div class="sign-box" id="sigBoxClient">
-        <div class="sign-line"></div>
-        <p><strong>${esc(d.signatures.clientName || d.client.name) || "Firma del Cliente"}</strong></p>
-        <p>Cliente</p>
+  // Disclaimer legal bilingüe
+  html += `
+    <div class="contract-disclaimer clause-row">
+      <div class="col col-es" lang="es">
+        <h3>Aviso legal</h3>
+        <p>Este contrato bilingüe ha sido preparado con el mejor esfuerzo para reflejar los mismos derechos y obligaciones en ambos idiomas. Para contratos superiores a $15,000 USD o industrias reguladas (salud, fintech, gobierno), se recomienda firmemente la revisión legal en la jurisdicción aplicable antes de firmar.</p>
       </div>
-      <div class="sign-box" id="sigBoxProvider">
-        <div class="sign-line"></div>
-        <p><strong>${esc(d.signatures.providerName || d.provider.name) || "Firma del Proveedor"}</strong></p>
-        <p>Proveedor</p>
+      <div class="col col-en" lang="en">
+        <h3>Legal Notice</h3>
+        <p>This bilingual contract has been prepared with best efforts to reflect the same rights and obligations in both languages. For contracts exceeding $15,000 USD or regulated industries (healthcare, fintech, government), legal review in the applicable jurisdiction is strongly recommended before signing.</p>
       </div>
     </div>
   `;
+
+  // Bloque de firmas (bilingüe)
+  html += renderSignatureBlock(d);
+
   $("#contractDoc").innerHTML = html;
+}
+
+function renderSignatureBlock(d) {
+  const clientNameEs = esc(d.signatures.clientName || d.client.name) || "Firma del Cliente";
+  const clientNameEn = esc(d.signatures.clientName || d.client.name) || "Client Signature";
+  const providerNameEs = esc(d.signatures.providerName || d.provider.name) || "Firma del Proveedor";
+  const providerNameEn = esc(d.signatures.providerName || d.provider.name) || "Provider Signature";
+  return `
+    <div class="sign-row">
+      <div class="sign-box" id="sigBoxClient">
+        <div class="sign-line"></div>
+        <p><strong>${clientNameEs}</strong></p>
+        <p>Cliente / Client</p>
+      </div>
+      <div class="sign-box" id="sigBoxProvider">
+        <div class="sign-line"></div>
+        <p><strong>${providerNameEs}</strong></p>
+        <p>Proveedor / Provider</p>
+      </div>
+    </div>
+  `;
 }
 
 /* -------- Signatures -------- */
 function resizeCanvases() {
-  [sigClientPad, sigProviderPad].forEach(pad => {
+  [sigClientPad, sigProviderPad].forEach((pad) => {
     if (!pad) return;
     const canvas = pad.canvas;
     const ratio = Math.max(window.devicePixelRatio || 1, 1);
@@ -305,7 +295,7 @@ function initSignatures() {
   resizeCanvases();
   window.addEventListener("resize", () => clearTimeout(window.__rt) || (window.__rt = setTimeout(resizeCanvases, 120)));
 
-  $$("[data-clear]").forEach(btn => {
+  $$("[data-clear]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const id = btn.dataset.clear;
       if (id === "sigClient") sigClientPad.clear();
@@ -314,19 +304,20 @@ function initSignatures() {
   });
 }
 
-/* -------- PDF generation -------- */
+/* -------- PDF generation (A4 landscape, bilingual) -------- */
 async function downloadPDF() {
   try {
     if (typeof html2canvas === "undefined" || !window.jspdf) {
-      toast("Librerías no cargadas. Revisa tu conexión a internet.", "error");
+      toast(I18N.t("toast.libsMissing"), "error");
       return;
     }
 
-    toast("Generando PDF...");
+    toast(I18N.t("toast.generating"));
     const d = collectData();
 
-    // Render contract into an off-screen visible clone (so html2canvas can rasterize it)
+    // Re-render contract to capture latest data + prevailing language
     renderContract();
+
     const original = $("#contractDoc");
     const clone = original.cloneNode(true);
     clone.id = "contractDocClone";
@@ -336,45 +327,49 @@ async function downloadPDF() {
       const img = sigClientPad.toDataURL("image/png");
       const box = clone.querySelector("#sigBoxClient");
       if (box) box.innerHTML =
-        `<img src="${img}" alt="Firma del Cliente" style="max-width:100%;max-height:90px;margin-bottom:6px;" />` +
-        `<p style="margin:2px 0;font-size:13px;"><strong>${esc(d.signatures.clientName || d.client.name) || "Cliente"}</strong></p>` +
-        `<p style="margin:2px 0;font-size:12px;color:#475569;">Cliente</p>`;
+        `<img src="${img}" alt="Firma del Cliente / Client Signature" style="max-width:100%;max-height:90px;margin-bottom:6px;" />` +
+        `<p style="margin:2px 0;font-size:13px;"><strong>${esc(d.signatures.clientName || d.client.name) || "Cliente / Client"}</strong></p>` +
+        `<p style="margin:2px 0;font-size:12px;color:#475569;">Cliente / Client</p>`;
     }
     if (sigProviderPad && !sigProviderPad.isEmpty()) {
       const img = sigProviderPad.toDataURL("image/png");
       const box = clone.querySelector("#sigBoxProvider");
       if (box) box.innerHTML =
-        `<img src="${img}" alt="Firma del Proveedor" style="max-width:100%;max-height:90px;margin-bottom:6px;" />` +
-        `<p style="margin:2px 0;font-size:13px;"><strong>${esc(d.signatures.providerName || d.provider.name) || "Proveedor"}</strong></p>` +
-        `<p style="margin:2px 0;font-size:12px;color:#475569;">Proveedor</p>`;
+        `<img src="${img}" alt="Firma del Proveedor / Provider Signature" style="max-width:100%;max-height:90px;margin-bottom:6px;" />` +
+        `<p style="margin:2px 0;font-size:13px;"><strong>${esc(d.signatures.providerName || d.provider.name) || "Proveedor / Provider"}</strong></p>` +
+        `<p style="margin:2px 0;font-size:12px;color:#475569;">Proveedor / Provider</p>`;
     }
 
-    // Host the clone in a visible but off-screen wrapper
+    // Off-screen wrapper sized for landscape (wider for 2 columns)
+    const RENDER_WIDTH = 1100; // px — buena resolución para 297mm landscape
     const holder = document.createElement("div");
-    holder.style.cssText = "position:fixed;left:-10000px;top:0;width:800px;background:#ffffff;z-index:-1;";
+    holder.style.cssText = `position:fixed;left:-12000px;top:0;width:${RENDER_WIDTH}px;background:#ffffff;z-index:-1;`;
+    clone.style.cssText = "padding:24px 28px;background:#ffffff;color:#0f172a;font-size:12px;";
     holder.appendChild(clone);
     document.body.appendChild(holder);
 
-    // Wait for images (signatures) to load before rasterizing
+    // Wait for signature images to load
     const imgs = [...clone.querySelectorAll("img")];
-    await Promise.all(imgs.map(img => img.complete ? Promise.resolve() :
-      new Promise(res => { img.onload = img.onerror = res; })));
+    await Promise.all(imgs.map((img) => img.complete ? Promise.resolve() :
+      new Promise((res) => { img.onload = img.onerror = res; })));
 
     const canvas = await html2canvas(clone, {
-      scale: 2,
+      scale: 1.5,
       backgroundColor: "#ffffff",
       useCORS: true,
       logging: false,
-      windowWidth: 800
+      windowWidth: RENDER_WIDTH,
     });
 
     document.body.removeChild(holder);
 
-    const imgData = canvas.toDataURL("image/png");
+    // JPEG quality 0.92 — clave para mantener el PDF en tamaño razonable
+    // (PNG sin compresión sobre 2 columnas largas = 50MB+)
+    const imgData = canvas.toDataURL("image/jpeg", 0.92);
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
+    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "landscape", compress: true });
+    const pageW = pdf.internal.pageSize.getWidth();   // 297
+    const pageH = pdf.internal.pageSize.getHeight();  // 210
     const margin = 8;
     const imgW = pageW - margin * 2;
     const imgH = canvas.height * imgW / canvas.width;
@@ -382,22 +377,22 @@ async function downloadPDF() {
     let heightLeft = imgH;
     let position = margin;
 
-    pdf.addImage(imgData, "PNG", margin, position, imgW, imgH);
+    pdf.addImage(imgData, "JPEG", margin, position, imgW, imgH, undefined, "FAST");
     heightLeft -= (pageH - margin * 2);
 
     while (heightLeft > 0) {
       position = margin - (imgH - heightLeft);
       pdf.addPage();
-      pdf.addImage(imgData, "PNG", margin, position, imgW, imgH);
+      pdf.addImage(imgData, "JPEG", margin, position, imgW, imgH, undefined, "FAST");
       heightLeft -= (pageH - margin * 2);
     }
 
-    const safeName = (d.project.name || d.client.name || "contrato").replace(/[^\w\-]+/g, "_");
-    pdf.save(`Contrato_${safeName}.pdf`);
-    toast("PDF descargado", "success");
+    const safeName = (d.project.name || d.client.name || "contract").replace(/[^\w\-]+/g, "_");
+    pdf.save(`Contract_${safeName}_Bilingual.pdf`);
+    toast(I18N.t("toast.pdfDownloaded"), "success");
   } catch (err) {
     console.error("Error generando PDF:", err);
-    toast("Error: " + (err.message || "No se pudo generar el PDF"), "error");
+    toast(I18N.t("toast.pdfError") + ": " + (err.message || ""), "error");
   }
 }
 
@@ -417,9 +412,38 @@ function initTheme() {
   });
 }
 
+/* -------- Language toggle -------- */
+function initLangToggle() {
+  const btn = $("#btnLang");
+  const code = $("#langCode");
+  if (!btn || !code) return;
+
+  const updateBadge = () => {
+    code.textContent = I18N.locale === "es" ? "EN" : "ES";
+  };
+
+  btn.addEventListener("click", () => {
+    const next = I18N.locale === "es" ? "en" : "es";
+    I18N.setLocale(next);
+    updateBadge();
+    // Re-render contract preview with new locale (dates/money formatting)
+    if (currentStep === 4) renderContract();
+    // Update Next button label and prevailing confirm
+    $("#btnNext").textContent = currentStep === TOTAL_STEPS ? I18N.t("buttons.finish") : I18N.t("buttons.next");
+    updatePrevailingConfirm();
+  });
+
+  updateBadge();
+}
+
 /* -------- Init -------- */
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
+
+  // Cargar traducciones ANTES de cualquier otra cosa que use I18N.t()
+  await I18N.init();
+
+  initLangToggle();
   loadDraft();
   initSignatures();
 
@@ -432,13 +456,21 @@ document.addEventListener("DOMContentLoaded", () => {
     goToStep(currentStep + 1);
   });
   $("#btnPrev").addEventListener("click", () => goToStep(currentStep - 1));
-  $$(".step").forEach(s => s.addEventListener("click", () => {
+  $$(".step").forEach((s) => s.addEventListener("click", () => {
     const n = +s.dataset.step;
     if (n <= currentStep || validateStep(currentStep)) goToStep(n);
   }));
 
-  ["totalPrice", "initialPercent", "currency"].forEach(id => {
+  ["totalPrice", "initialPercent", "currency"].forEach((id) => {
     document.getElementById(id).addEventListener("input", recalcPayment);
+  });
+
+  // Prevailing language radios
+  document.querySelectorAll('input[name="prevailing"]').forEach((r) => {
+    r.addEventListener("change", () => {
+      updatePrevailingConfirm();
+      if (currentStep === 4) renderContract();
+    });
   });
 
   $("#btnSave").addEventListener("click", saveDraft);
@@ -446,6 +478,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   goToStep(1);
   recalcPayment();
+  updatePrevailingConfirm();
 });
 
 /* -------- Service Worker -------- */

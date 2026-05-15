@@ -1,0 +1,152 @@
+{
+  "header": {
+    "title": "Acuerdo Inteligente",
+    "subtitle": "Digital Services",
+    "themeAria": "Toggle theme",
+    "langAria": "Switch language"
+  },
+  "stepper": {
+    "client": "Client",
+    "project": "Project",
+    "payment": "Payments",
+    "contract": "Contract",
+    "signature": "Signature"
+  },
+  "step1": {
+    "title": "Client Information",
+    "subtitle": "Details of the party hiring the service.",
+    "client": {
+      "name": "Full name *",
+      "namePh": "e.g., John Smith",
+      "company": "Company",
+      "companyPh": "Company name (optional)",
+      "email": "Email *",
+      "emailPh": "client@email.com",
+      "phone": "Phone",
+      "phonePh": "+1 555 555 5555",
+      "address": "Address",
+      "addressPh": "Street, city, country",
+      "id": "Tax ID (SSN / EIN / National ID)",
+      "idPh": "Optional, but recommended"
+    },
+    "providerTitle": "Provider Information (you)",
+    "provider": {
+      "name": "Your name / company *",
+      "namePh": "e.g., Creative Studio LLC",
+      "email": "Email *",
+      "emailPh": "hello@yourcompany.com",
+      "phone": "Phone",
+      "phonePh": "+1 555 111 2222",
+      "id": "Tax ID",
+      "idPh": "EIN / Tax ID / VAT"
+    }
+  },
+  "step2": {
+    "title": "Project Details",
+    "subtitle": "What will be built and under what conditions.",
+    "type": "Project type *",
+    "typeSelect": "Select...",
+    "types": {
+      "web": "Website",
+      "mobile": "Mobile app",
+      "saas": "Web app / SaaS",
+      "automation": "Automation / Integration",
+      "ecommerce": "E-commerce",
+      "branding": "Branding / Design",
+      "ai": "Artificial Intelligence",
+      "other": "Other"
+    },
+    "name": "Project name",
+    "namePh": "e.g., Uber-AI Platform",
+    "description": "Project description *",
+    "descriptionPh": "Clearly describe what will be developed...",
+    "features": "Features / Deliverables (one per line) *",
+    "featuresPh": "Email login\nAdmin panel\nStripe integration\nPush notifications",
+    "startDate": "Start date",
+    "endDate": "Estimated delivery date",
+    "phases": "Project phases (optional, one per line)",
+    "phasesPh": "Phase 1: Design\nPhase 2: Development\nPhase 3: QA and launch",
+    "extrasTitle": "Add-ons",
+    "extras": {
+      "support": "Includes post-delivery support",
+      "supportDays": "Support days included",
+      "supportDaysPh": "30",
+      "revisions": "Revisions included",
+      "revisionsPh": "3",
+      "hosting": "Includes hosting / domain"
+    }
+  },
+  "step3": {
+    "title": "Payment Terms",
+    "subtitle": "Set amounts, dates, and payment method.",
+    "currency": "Currency",
+    "totalPrice": "Total price *",
+    "totalPricePh": "5000",
+    "initialPercent": "Initial percentage (%)",
+    "initialAmount": "Initial payment (calculated)",
+    "remainingAmount": "Remaining balance",
+    "method": "Payment method *",
+    "methodSelect": "Select...",
+    "methods": {
+      "stripe": "Stripe",
+      "paypal": "PayPal",
+      "zelle": "Zelle",
+      "bank": "Bank transfer",
+      "wise": "Wise",
+      "crypto": "Crypto (USDT/BTC)",
+      "cash": "Cash"
+    },
+    "details": "Payment details",
+    "detailsPh": "Account, PayPal email, Stripe link, etc."
+  },
+  "step4": {
+    "title": "Contract Preview",
+    "subtitle": "Review the bilingual (Spanish and English) document generated automatically."
+  },
+  "step5": {
+    "title": "Digital Signature",
+    "subtitle": "Sign with your finger (mobile) or mouse (desktop).",
+    "clientSig": "Client Signature",
+    "providerSig": "Provider Signature",
+    "sigName": "Signer's name",
+    "sigNamePh": "Full name",
+    "prevailing": {
+      "title": "Prevailing Language",
+      "help": "This contract is signed in bilingual format. Please indicate which language shall prevail in case of legal discrepancy between both versions.",
+      "spanish": "Spanish",
+      "spanishHelp": "The Spanish version prevails in disputes",
+      "english": "English",
+      "englishHelp": "The English version prevails in disputes",
+      "confirmEs": "You have selected that the SPANISH version shall prevail.",
+      "confirmEn": "You have selected that the ENGLISH version shall prevail."
+    }
+  },
+  "buttons": {
+    "next": "Next →",
+    "prev": "← Back",
+    "finish": "Finish",
+    "downloadPdf": "Download signed PDF",
+    "saveDraft": "Save draft",
+    "clear": "Clear"
+  },
+  "toast": {
+    "draftSaved": "Draft saved",
+    "draftFailed": "Could not save draft",
+    "fillRequired": "Please complete all required fields",
+    "selectProject": "Select a project type",
+    "describeProject": "Describe the project",
+    "addFeature": "Add at least one feature",
+    "enterPrice": "Enter the total price",
+    "selectPayment": "Select a payment method",
+    "generating": "Generating PDF...",
+    "pdfDownloaded": "PDF downloaded",
+    "pdfError": "Error generating PDF",
+    "libsMissing": "Libraries not loaded. Check your internet connection."
+  },
+  "contract": {
+    "title": "Digital Services Agreement",
+    "generatedOn": "Document generated on {date}",
+    "disclaimerTitle": "Legal Notice",
+    "disclaimer": "This bilingual contract has been prepared with best efforts to reflect the same rights and obligations in both languages. For contracts exceeding $15,000 USD or regulated industries (healthcare, fintech, government), legal review in the applicable jurisdiction is strongly recommended before signing."
+  }
+}

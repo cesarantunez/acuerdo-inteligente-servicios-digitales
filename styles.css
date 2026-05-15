@@ -70,6 +70,8 @@ input, select, textarea, button { font-family: inherit; font-size: 15px; }
 .brand h1 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
 .brand p { margin: 0; font-size: 12px; color: var(--text-2); }
 
+.header-actions { display: flex; align-items: center; gap: 8px; }
+
 .icon-btn {
   width: 40px; height: 40px; border-radius: 10px;
   background: var(--surface); color: var(--text-2);
@@ -78,6 +80,12 @@ input, select, textarea, button { font-family: inherit; font-size: 15px; }
 }
 .icon-btn:hover { color: var(--primary); border-color: var(--primary); }
 .icon-btn svg { width: 18px; height: 18px; }
+
+.lang-btn { width: auto; min-width: 52px; padding: 0 10px; }
+.lang-btn #langCode {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-weight: 700; font-size: 13px; letter-spacing: .04em;
+}
 
 /* ===== Stepper ===== */
 .stepper { padding: 18px 22px 4px; }
@@ -383,4 +391,159 @@ input, select, textarea, button { font-family: inherit; font-size: 15px; }
     position: absolute; left: 0; top: 0; width: 100%;
     box-shadow: none; padding: 20px;
   }
+}
+
+/* =========================================================
+   BILINGUAL — selector de idioma prevaleciente (step 5)
+========================================================= */
+.prevailing-selector {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.prevailing-selector h3 {
+  margin: 0 0 6px; font-size: 16px; color: var(--text);
+}
+.prevailing-selector > p {
+  margin: 0 0 14px; font-size: 13px; color: var(--text-2);
+}
+.prevailing-options {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.prevailing-option {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  transition: .2s;
+}
+.prevailing-option:hover { border-color: var(--primary); }
+.prevailing-option input[type="radio"] {
+  margin-top: 2px; accent-color: var(--primary);
+  width: 18px; height: 18px;
+}
+.prevailing-option:has(input:checked) {
+  border-color: var(--primary);
+  background: rgba(99,102,241,.06);
+}
+.prevailing-option .po-flag { font-size: 22px; line-height: 1; margin-bottom: 4px; }
+.prevailing-option .po-label { font-weight: 700; font-size: 14px; color: var(--text); }
+.prevailing-option .po-help { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.prevailing-confirm {
+  margin: 14px 0 0; padding: 10px 12px;
+  background: rgba(99,102,241,.08);
+  border-left: 3px solid var(--primary);
+  border-radius: 6px;
+  font-size: 13px; color: var(--text);
+}
+.prevailing-confirm:empty { display: none; }
+
+/* =========================================================
+   BILINGUAL — Layout side-by-side del contrato
+========================================================= */
+.document-bilingual-header {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+  padding-bottom: 14px; margin-bottom: 18px;
+  border-bottom: 2px solid #eef2ff;
+}
+.document-bilingual-header .dbh-col {
+  text-align: center;
+}
+.document-bilingual-header h1 {
+  margin: 0 0 4px; font-size: 18px; letter-spacing: -.01em;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.document-bilingual-header .doc-sub {
+  margin: 0; color: #64748b; font-size: 12px;
+}
+
+.contract-bilingual {
+  display: flex; flex-direction: column; gap: 14px;
+}
+.clause-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  align-items: stretch;       /* clave: la columna larga marca la altura */
+  padding: 12px 0;
+  border-top: 1px solid #e2e8f0;
+}
+.clause-row:first-child { border-top: none; }
+.clause-row .col {
+  display: flex; flex-direction: column;
+}
+.clause-row .col-es { border-right: 1px solid #f1f5f9; padding-right: 14px; }
+.clause-row .col-en { padding-left: 14px; }
+.clause-row .col h2 {
+  margin: 0 0 8px; font-size: 13px;
+  color: var(--primary-dark);
+  text-transform: uppercase; letter-spacing: .05em;
+  font-weight: 700;
+}
+.clause-row .col p,
+.clause-row .col li {
+  margin: 0 0 6px; font-size: 12px; line-height: 1.55; color: #1e293b;
+}
+.clause-row .col ul { margin: 4px 0 8px 18px; padding: 0; }
+
+.clause-highlighted {
+  background: #fef9c3;
+  border: 2px solid #facc15;
+  border-radius: 10px;
+  padding: 14px 16px !important;
+  border-top: 2px solid #facc15;
+}
+.clause-highlighted .col-es,
+.clause-highlighted .col-en {
+  border: none !important;
+}
+.clause-highlighted .col h2 { color: #854d0e; }
+
+.contract-disclaimer {
+  margin-top: 22px; padding-top: 16px;
+  border-top: 2px solid #eef2ff;
+}
+.contract-disclaimer .col h3 {
+  margin: 0 0 6px; font-size: 12px;
+  color: var(--text-2); text-transform: uppercase; letter-spacing: .06em;
+}
+.contract-disclaimer .col p {
+  font-size: 11px; color: #475569; line-height: 1.5;
+}
+
+/* Dark-mode adjustments para el contrato */
+[data-theme="dark"] .clause-row { border-top-color: #273055; }
+[data-theme="dark"] .clause-row .col-es { border-right-color: #273055; }
+[data-theme="dark"] .clause-row .col p,
+[data-theme="dark"] .clause-row .col li { color: #cbd5e1; }
+[data-theme="dark"] .clause-highlighted {
+  background: rgba(250, 204, 21, .08);
+  border-color: #facc15;
+}
+[data-theme="dark"] .clause-highlighted .col h2 { color: #fde047; }
+[data-theme="dark"] .document-bilingual-header { border-bottom-color: #273055; }
+[data-theme="dark"] .contract-disclaimer { border-top-color: #273055; }
+[data-theme="dark"] .contract-disclaimer .col p { color: #94a3b8; }
+
+/* =========================================================
+   BILINGUAL — Mobile responsive overrides
+   El selector se apila; el contrato preview se mantiene en
+   2 columnas (es la fidelidad del PDF), pero con padding reducido.
+========================================================= */
+@media (max-width: 720px) {
+  .prevailing-options { grid-template-columns: 1fr; }
+  .document-bilingual-header { gap: 14px; }
+  .document-bilingual-header h1 { font-size: 15px; }
+  .clause-row { gap: 12px; }
+  .clause-row .col-es { padding-right: 8px; }
+  .clause-row .col-en { padding-left: 8px; }
+  .clause-row .col h2 { font-size: 12px; }
+  .clause-row .col p,
+  .clause-row .col li { font-size: 11px; }
+  .document { padding: 18px 14px; }
 }

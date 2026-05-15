@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#6366f1" />
-  <meta name="description" content="Genera contratos digitales profesionales con firma electrónica" />
+  <meta name="description" content="Genera contratos digitales profesionales bilingües (ES/EN) con firma electrónica" />
   <title>Acuerdo Inteligente · Servicios Digitales</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/svg+xml" href="icon.svg" />
@@ -22,26 +22,31 @@
         </svg>
       </div>
       <div>
-        <h1>Acuerdo Inteligente</h1>
-        <p>Servicios Digitales</p>
+        <h1 data-i18n="header.title">Acuerdo Inteligente</h1>
+        <p data-i18n="header.subtitle">Servicios Digitales</p>
       </div>
     </div>
-    <button id="btnTheme" class="icon-btn" title="Cambiar tema" aria-label="Cambiar tema">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="5"/>
-        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-      </svg>
-    </button>
+    <div class="header-actions">
+      <button id="btnLang" class="icon-btn lang-btn" data-i18n-aria="header.langAria" title="Switch language">
+        <span id="langCode">EN</span>
+      </button>
+      <button id="btnTheme" class="icon-btn" data-i18n-aria="header.themeAria" title="Cambiar tema">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+      </button>
+    </div>
   </header>
 
   <!-- Stepper -->
   <nav class="stepper" aria-label="Progreso">
     <ol>
-      <li class="step active" data-step="1"><span>1</span><p>Cliente</p></li>
-      <li class="step" data-step="2"><span>2</span><p>Proyecto</p></li>
-      <li class="step" data-step="3"><span>3</span><p>Pagos</p></li>
-      <li class="step" data-step="4"><span>4</span><p>Contrato</p></li>
-      <li class="step" data-step="5"><span>5</span><p>Firma</p></li>
+      <li class="step active" data-step="1"><span>1</span><p data-i18n="stepper.client">Cliente</p></li>
+      <li class="step" data-step="2"><span>2</span><p data-i18n="stepper.project">Proyecto</p></li>
+      <li class="step" data-step="3"><span>3</span><p data-i18n="stepper.payment">Pagos</p></li>
+      <li class="step" data-step="4"><span>4</span><p data-i18n="stepper.contract">Contrato</p></li>
+      <li class="step" data-step="5"><span>5</span><p data-i18n="stepper.signature">Firma</p></li>
     </ol>
   </nav>
 
@@ -50,53 +55,53 @@
     <!-- STEP 1: CLIENTE -->
     <section class="panel active" data-panel="1">
       <header class="panel-header">
-        <h2>Datos del Cliente</h2>
-        <p>Información de quien contrata el servicio.</p>
+        <h2 data-i18n="step1.title">Datos del Cliente</h2>
+        <p data-i18n="step1.subtitle">Información de quien contrata el servicio.</p>
       </header>
       <div class="grid-2">
         <label class="field">
-          <span>Nombre completo *</span>
-          <input type="text" id="clientName" placeholder="Ej: Juan Pérez" required />
+          <span data-i18n="step1.client.name">Nombre completo *</span>
+          <input type="text" id="clientName" data-i18n-ph="step1.client.namePh" placeholder="Ej: Juan Pérez" required />
         </label>
         <label class="field">
-          <span>Empresa</span>
-          <input type="text" id="clientCompany" placeholder="Nombre de empresa (opcional)" />
+          <span data-i18n="step1.client.company">Empresa</span>
+          <input type="text" id="clientCompany" data-i18n-ph="step1.client.companyPh" placeholder="Nombre de empresa (opcional)" />
         </label>
         <label class="field">
-          <span>Email *</span>
-          <input type="email" id="clientEmail" placeholder="cliente@correo.com" required />
+          <span data-i18n="step1.client.email">Email *</span>
+          <input type="email" id="clientEmail" data-i18n-ph="step1.client.emailPh" placeholder="cliente@correo.com" required />
         </label>
         <label class="field">
-          <span>Teléfono</span>
-          <input type="tel" id="clientPhone" placeholder="+1 555 555 5555" />
+          <span data-i18n="step1.client.phone">Teléfono</span>
+          <input type="tel" id="clientPhone" data-i18n-ph="step1.client.phonePh" placeholder="+1 555 555 5555" />
         </label>
         <label class="field span-2">
-          <span>Dirección</span>
-          <input type="text" id="clientAddress" placeholder="Calle, ciudad, país" />
+          <span data-i18n="step1.client.address">Dirección</span>
+          <input type="text" id="clientAddress" data-i18n-ph="step1.client.addressPh" placeholder="Calle, ciudad, país" />
         </label>
         <label class="field span-2">
-          <span>Identificación (DNI / RFC / Cédula)</span>
-          <input type="text" id="clientId" placeholder="Opcional, pero recomendado" />
+          <span data-i18n="step1.client.id">Identificación (DNI / RFC / Cédula)</span>
+          <input type="text" id="clientId" data-i18n-ph="step1.client.idPh" placeholder="Opcional, pero recomendado" />
         </label>
       </div>
 
-      <h3 class="section-title">Datos del Proveedor (tú)</h3>
+      <h3 class="section-title" data-i18n="step1.providerTitle">Datos del Proveedor (tú)</h3>
       <div class="grid-2">
         <label class="field">
-          <span>Tu nombre / empresa *</span>
-          <input type="text" id="providerName" placeholder="Ej: Estudio Creativo SAS" required />
+          <span data-i18n="step1.provider.name">Tu nombre / empresa *</span>
+          <input type="text" id="providerName" data-i18n-ph="step1.provider.namePh" placeholder="Ej: Estudio Creativo SAS" required />
         </label>
         <label class="field">
-          <span>Email *</span>
-          <input type="email" id="providerEmail" placeholder="hola@tuempresa.com" required />
+          <span data-i18n="step1.provider.email">Email *</span>
+          <input type="email" id="providerEmail" data-i18n-ph="step1.provider.emailPh" placeholder="hola@tuempresa.com" required />
         </label>
         <label class="field">
-          <span>Teléfono</span>
-          <input type="tel" id="providerPhone" placeholder="+1 555 111 2222" />
+          <span data-i18n="step1.provider.phone">Teléfono</span>
+          <input type="tel" id="providerPhone" data-i18n-ph="step1.provider.phonePh" placeholder="+1 555 111 2222" />
         </label>
         <label class="field">
-          <span>Identificación fiscal</span>
-          <input type="text" id="providerId" placeholder="RFC / NIT / Tax ID" />
+          <span data-i18n="step1.provider.id">Identificación fiscal</span>
+          <input type="text" id="providerId" data-i18n-ph="step1.provider.idPh" placeholder="RFC / NIT / Tax ID" />
         </label>
       </div>
     </section>
@@ -104,67 +109,67 @@
     <!-- STEP 2: PROYECTO -->
     <section class="panel" data-panel="2">
       <header class="panel-header">
-        <h2>Detalles del Proyecto</h2>
-        <p>Qué se va a desarrollar y bajo qué condiciones.</p>
+        <h2 data-i18n="step2.title">Detalles del Proyecto</h2>
+        <p data-i18n="step2.subtitle">Qué se va a desarrollar y bajo qué condiciones.</p>
       </header>
       <div class="grid-2">
         <label class="field">
-          <span>Tipo de proyecto *</span>
-          <select id="projectType" required>
+          <span data-i18n="step2.type">Tipo de proyecto *</span>
+          <select id="projectType" data-i18n-empty="step2.typeSelect" required>
             <option value="">Seleccionar...</option>
-            <option>Página web</option>
-            <option>Aplicación móvil</option>
-            <option>Aplicación web / SaaS</option>
-            <option>Automatización / Integración</option>
-            <option>E-commerce</option>
-            <option>Branding / Diseño</option>
-            <option>Inteligencia Artificial</option>
-            <option>Otro</option>
+            <option value="web" data-i18n="step2.types.web">Página web</option>
+            <option value="mobile" data-i18n="step2.types.mobile">Aplicación móvil</option>
+            <option value="saas" data-i18n="step2.types.saas">Aplicación web / SaaS</option>
+            <option value="automation" data-i18n="step2.types.automation">Automatización / Integración</option>
+            <option value="ecommerce" data-i18n="step2.types.ecommerce">E-commerce</option>
+            <option value="branding" data-i18n="step2.types.branding">Branding / Diseño</option>
+            <option value="ai" data-i18n="step2.types.ai">Inteligencia Artificial</option>
+            <option value="other" data-i18n="step2.types.other">Otro</option>
           </select>
         </label>
         <label class="field">
-          <span>Nombre del proyecto</span>
-          <input type="text" id="projectName" placeholder="Ej: Plataforma Uber-AI" />
+          <span data-i18n="step2.name">Nombre del proyecto</span>
+          <input type="text" id="projectName" data-i18n-ph="step2.namePh" placeholder="Ej: Plataforma Uber-AI" />
         </label>
         <label class="field span-2">
-          <span>Descripción del proyecto *</span>
-          <textarea id="projectDescription" rows="4" placeholder="Describe con claridad qué se desarrollará..."></textarea>
+          <span data-i18n="step2.description">Descripción del proyecto *</span>
+          <textarea id="projectDescription" rows="4" data-i18n-ph="step2.descriptionPh" placeholder="Describe con claridad qué se desarrollará..."></textarea>
         </label>
         <label class="field span-2">
-          <span>Funcionalidades / Entregables (una por línea) *</span>
-          <textarea id="projectFeatures" rows="5" placeholder="Login con email&#10;Panel de administración&#10;Integración con Stripe&#10;Notificaciones push"></textarea>
+          <span data-i18n="step2.features">Funcionalidades / Entregables (una por línea) *</span>
+          <textarea id="projectFeatures" rows="5" data-i18n-ph="step2.featuresPh" placeholder="Login con email&#10;Panel de administración&#10;Integración con Stripe&#10;Notificaciones push"></textarea>
         </label>
         <label class="field">
-          <span>Fecha de inicio</span>
+          <span data-i18n="step2.startDate">Fecha de inicio</span>
           <input type="date" id="startDate" />
         </label>
         <label class="field">
-          <span>Fecha estimada de entrega</span>
+          <span data-i18n="step2.endDate">Fecha estimada de entrega</span>
           <input type="date" id="endDate" />
         </label>
         <label class="field span-2">
-          <span>Fases del proyecto (opcional, una por línea)</span>
-          <textarea id="projectPhases" rows="3" placeholder="Fase 1: Diseño&#10;Fase 2: Desarrollo&#10;Fase 3: QA y lanzamiento"></textarea>
+          <span data-i18n="step2.phases">Fases del proyecto (opcional, una por línea)</span>
+          <textarea id="projectPhases" rows="3" data-i18n-ph="step2.phasesPh" placeholder="Fase 1: Diseño&#10;Fase 2: Desarrollo&#10;Fase 3: QA y lanzamiento"></textarea>
         </label>
       </div>
 
-      <h3 class="section-title">Extras</h3>
+      <h3 class="section-title" data-i18n="step2.extrasTitle">Extras</h3>
       <div class="grid-2">
         <label class="check">
           <input type="checkbox" id="extraSupport" />
-          <span>Incluye soporte post-entrega</span>
+          <span data-i18n="step2.extras.support">Incluye soporte post-entrega</span>
         </label>
         <label class="field">
-          <span>Días de soporte incluidos</span>
-          <input type="number" id="supportDays" min="0" placeholder="30" />
+          <span data-i18n="step2.extras.supportDays">Días de soporte incluidos</span>
+          <input type="number" id="supportDays" min="0" data-i18n-ph="step2.extras.supportDaysPh" placeholder="30" />
         </label>
         <label class="field">
-          <span>Revisiones incluidas</span>
-          <input type="number" id="revisions" min="0" placeholder="3" />
+          <span data-i18n="step2.extras.revisions">Revisiones incluidas</span>
+          <input type="number" id="revisions" min="0" data-i18n-ph="step2.extras.revisionsPh" placeholder="3" />
         </label>
         <label class="check">
           <input type="checkbox" id="extraHosting" />
-          <span>Incluye hosting / dominio</span>
+          <span data-i18n="step2.extras.hosting">Incluye hosting / dominio</span>
         </label>
       </div>
     </section>
@@ -172,12 +177,12 @@
     <!-- STEP 3: PAGOS -->
     <section class="panel" data-panel="3">
       <header class="panel-header">
-        <h2>Condiciones de Pago</h2>
-        <p>Define montos, fechas y método de pago.</p>
+        <h2 data-i18n="step3.title">Condiciones de Pago</h2>
+        <p data-i18n="step3.subtitle">Define montos, fechas y método de pago.</p>
       </header>
       <div class="grid-2">
         <label class="field">
-          <span>Moneda</span>
+          <span data-i18n="step3.currency">Moneda</span>
           <select id="currency">
             <option value="USD">USD – Dólar</option>
             <option value="MXN">MXN – Peso Mexicano</option>
@@ -189,46 +194,46 @@
           </select>
         </label>
         <label class="field">
-          <span>Precio total *</span>
-          <input type="number" id="totalPrice" min="0" step="0.01" placeholder="5000" required />
+          <span data-i18n="step3.totalPrice">Precio total *</span>
+          <input type="number" id="totalPrice" min="0" step="0.01" data-i18n-ph="step3.totalPricePh" placeholder="5000" required />
         </label>
         <label class="field">
-          <span>Porcentaje inicial (%)</span>
+          <span data-i18n="step3.initialPercent">Porcentaje inicial (%)</span>
           <input type="number" id="initialPercent" min="0" max="100" value="50" />
         </label>
         <label class="field">
-          <span>Pago inicial calculado</span>
+          <span data-i18n="step3.initialAmount">Pago inicial calculado</span>
           <input type="text" id="initialAmount" readonly />
         </label>
         <label class="field">
-          <span>Saldo restante</span>
+          <span data-i18n="step3.remainingAmount">Saldo restante</span>
           <input type="text" id="remainingAmount" readonly />
         </label>
         <label class="field">
-          <span>Método de pago *</span>
-          <select id="paymentMethod" required>
+          <span data-i18n="step3.method">Método de pago *</span>
+          <select id="paymentMethod" data-i18n-empty="step3.methodSelect" required>
             <option value="">Seleccionar...</option>
-            <option>Stripe</option>
-            <option>PayPal</option>
-            <option>Zelle</option>
-            <option>Transferencia bancaria</option>
-            <option>Wise</option>
-            <option>Crypto (USDT/BTC)</option>
-            <option>Efectivo</option>
+            <option value="stripe" data-i18n="step3.methods.stripe">Stripe</option>
+            <option value="paypal" data-i18n="step3.methods.paypal">PayPal</option>
+            <option value="zelle" data-i18n="step3.methods.zelle">Zelle</option>
+            <option value="bank" data-i18n="step3.methods.bank">Transferencia bancaria</option>
+            <option value="wise" data-i18n="step3.methods.wise">Wise</option>
+            <option value="crypto" data-i18n="step3.methods.crypto">Crypto (USDT/BTC)</option>
+            <option value="cash" data-i18n="step3.methods.cash">Efectivo</option>
           </select>
         </label>
         <label class="field span-2">
-          <span>Detalles o datos de pago</span>
-          <textarea id="paymentDetails" rows="3" placeholder="Cuenta, email de PayPal, link de Stripe, etc."></textarea>
+          <span data-i18n="step3.details">Detalles o datos de pago</span>
+          <textarea id="paymentDetails" rows="3" data-i18n-ph="step3.detailsPh" placeholder="Cuenta, email de PayPal, link de Stripe, etc."></textarea>
         </label>
       </div>
     </section>
 
-    <!-- STEP 4: CONTRATO (preview) -->
+    <!-- STEP 4: CONTRATO (preview bilingual) -->
     <section class="panel" data-panel="4">
       <header class="panel-header">
-        <h2>Vista Previa del Contrato</h2>
-        <p>Revisa el documento generado automáticamente.</p>
+        <h2 data-i18n="step4.title">Vista Previa del Contrato</h2>
+        <p data-i18n="step4.subtitle">Revisa el documento bilingüe (español e inglés) generado automáticamente.</p>
       </header>
       <div class="document-wrap">
         <article id="contractDoc" class="document"></article>
@@ -238,31 +243,56 @@
     <!-- STEP 5: FIRMA -->
     <section class="panel" data-panel="5">
       <header class="panel-header">
-        <h2>Firma Digital</h2>
-        <p>Firma con el dedo (móvil) o mouse (desktop).</p>
+        <h2 data-i18n="step5.title">Firma Digital</h2>
+        <p data-i18n="step5.subtitle">Firma con el dedo (móvil) o mouse (desktop).</p>
       </header>
+
+      <!-- Selector de idioma prevaleciente (decisión legal, distinta del toggle visual) -->
+      <div class="prevailing-selector">
+        <h3 data-i18n="step5.prevailing.title">Idioma prevaleciente</h3>
+        <p data-i18n="step5.prevailing.help">Este contrato se firma en formato bilingüe. Indica qué idioma prevalecerá en caso de discrepancia legal entre ambas versiones.</p>
+        <div class="prevailing-options">
+          <label class="prevailing-option">
+            <input type="radio" name="prevailing" value="es" checked />
+            <div>
+              <div class="po-flag">🇪🇸</div>
+              <div class="po-label" data-i18n="step5.prevailing.spanish">Español</div>
+              <div class="po-help" data-i18n="step5.prevailing.spanishHelp">La versión en español prevalece en disputas</div>
+            </div>
+          </label>
+          <label class="prevailing-option">
+            <input type="radio" name="prevailing" value="en" />
+            <div>
+              <div class="po-flag">🇺🇸</div>
+              <div class="po-label" data-i18n="step5.prevailing.english">English</div>
+              <div class="po-help" data-i18n="step5.prevailing.englishHelp">The English version prevails in disputes</div>
+            </div>
+          </label>
+        </div>
+        <p class="prevailing-confirm" id="prevailingConfirm" data-i18n="step5.prevailing.confirmEs"></p>
+      </div>
 
       <div class="sign-grid">
         <div class="sign-card">
-          <h3>Firma del Cliente</h3>
+          <h3 data-i18n="step5.clientSig">Firma del Cliente</h3>
           <canvas id="sigClient" class="sig-canvas"></canvas>
           <div class="sig-actions">
-            <button class="btn btn-ghost" data-clear="sigClient">Limpiar</button>
+            <button class="btn btn-ghost" data-clear="sigClient" data-i18n="buttons.clear">Limpiar</button>
           </div>
           <label class="field">
-            <span>Nombre de quien firma</span>
-            <input type="text" id="sigClientName" placeholder="Nombre completo" />
+            <span data-i18n="step5.sigName">Nombre de quien firma</span>
+            <input type="text" id="sigClientName" data-i18n-ph="step5.sigNamePh" placeholder="Nombre completo" />
           </label>
         </div>
         <div class="sign-card">
-          <h3>Firma del Proveedor</h3>
+          <h3 data-i18n="step5.providerSig">Firma del Proveedor</h3>
           <canvas id="sigProvider" class="sig-canvas"></canvas>
           <div class="sig-actions">
-            <button class="btn btn-ghost" data-clear="sigProvider">Limpiar</button>
+            <button class="btn btn-ghost" data-clear="sigProvider" data-i18n="buttons.clear">Limpiar</button>
           </div>
           <label class="field">
-            <span>Nombre de quien firma</span>
-            <input type="text" id="sigProviderName" placeholder="Nombre completo" />
+            <span data-i18n="step5.sigName">Nombre de quien firma</span>
+            <input type="text" id="sigProviderName" data-i18n-ph="step5.sigNamePh" placeholder="Nombre completo" />
           </label>
         </div>
       </div>
@@ -274,9 +304,9 @@
             <polyline points="7 10 12 15 17 10"/>
             <line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
-          Descargar PDF firmado
+          <span data-i18n="buttons.downloadPdf">Descargar PDF firmado</span>
         </button>
-        <button id="btnSave" class="btn btn-ghost">Guardar borrador</button>
+        <button id="btnSave" class="btn btn-ghost" data-i18n="buttons.saveDraft">Guardar borrador</button>
       </div>
     </section>
 
@@ -284,20 +314,26 @@
 
   <!-- Navigation bar -->
   <nav class="wizard-nav">
-    <button id="btnPrev" class="btn btn-ghost" disabled>← Atrás</button>
+    <button id="btnPrev" class="btn btn-ghost" disabled data-i18n="buttons.prev">← Atrás</button>
     <div class="progress">
       <div id="progressBar"></div>
     </div>
-    <button id="btnNext" class="btn btn-primary">Siguiente →</button>
+    <button id="btnNext" class="btn btn-primary" data-i18n="buttons.next">Siguiente →</button>
   </nav>
 
   <!-- Toast -->
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <!-- Libraries -->
+  <!-- Libraries (CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <!-- App modules (orden importa: i18n -> glossary -> clauses -> app) -->
+  <script src="lib/i18n.js"></script>
+  <script src="lib/legal/glossary.js"></script>
+  <script src="lib/legal/clauses-es.js"></script>
+  <script src="lib/legal/clauses-en.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
