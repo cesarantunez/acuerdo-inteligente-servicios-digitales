@@ -1,5 +1,5 @@
-/* Acuerdo Inteligente · Service Worker (v2 bilingual) */
-const CACHE = "acuerdo-inteligente-v2-bilingual";
+/* Acuerdo Inteligente · Service Worker (v3 monolingual Legal portrait) */
+const CACHE = "acuerdo-inteligente-v3-legal";
 const ASSETS = [
   "./",
   "./index.html",

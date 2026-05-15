@@ -1,6 +1,6 @@
 /* =========================================================
    Acuerdo Inteligente de Servicios Digitales
-   PWA — wizard + contrato bilingüe ES/EN + firma + PDF
+   PWA — wizard + contrato monolingüe (ES o EN) + firma + PDF Legal
 ========================================================= */
 
 const TOTAL_STEPS = 5;
@@ -15,7 +15,7 @@ function esc(s) {
   return (s == null ? "" : String(s)).replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch]));
 }
 function formatMoney(n, cur = "USD", localeHint) {
-  const loc = localeHint === "en" ? "en-US" : (window.I18N && window.I18N.locale === "en" ? "en-US" : "es-MX");
+  const loc = localeHint === "en" ? "en-US" : (localeHint === "es" ? "es-MX" : (window.I18N && window.I18N.locale === "en" ? "en-US" : "es-MX"));
   try { return new Intl.NumberFormat(loc, { style: "currency", currency: cur }).format(+n || 0); }
   catch { return `${cur} ${(+n || 0).toFixed(2)}`; }
 }
@@ -34,12 +34,7 @@ function listify(text) {
 window.AI = { esc, formatMoney, formatDate, listify };
 
 /* -------- State & persistence -------- */
-const STORAGE_KEY = "acuerdoInteligente.draft.v2";
-
-function getPrevailingLanguage() {
-  const checked = document.querySelector('input[name="prevailing"]:checked');
-  return checked ? checked.value : "es";
-}
+const STORAGE_KEY = "acuerdoInteligente.draft.v3";
 
 function collectData() {
   return {
@@ -83,9 +78,6 @@ function collectData() {
       clientName: $("#sigClientName").value.trim(),
       providerName: $("#sigProviderName").value.trim(),
     },
-    metadata: {
-      prevailingLanguage: getPrevailingLanguage(),
-    },
   };
 }
 
@@ -99,11 +91,6 @@ function applyData(d) {
   if (d.extras) { check("extraSupport", d.extras.support); set("supportDays", d.extras.supportDays); set("revisions", d.extras.revisions); check("extraHosting", d.extras.hosting); }
   if (d.payment) { set("currency", d.payment.currency || "USD"); set("totalPrice", d.payment.total || ""); set("initialPercent", d.payment.initialPercent ?? 50); set("paymentMethod", d.payment.method); set("paymentDetails", d.payment.details); }
   if (d.signatures) { set("sigClientName", d.signatures.clientName); set("sigProviderName", d.signatures.providerName); }
-  if (d.metadata && d.metadata.prevailingLanguage) {
-    const radio = document.querySelector(`input[name="prevailing"][value="${d.metadata.prevailingLanguage}"]`);
-    if (radio) radio.checked = true;
-    updatePrevailingConfirm();
-  }
   recalcPayment();
 }
 
@@ -142,10 +129,11 @@ function goToStep(n) {
     s.classList.toggle("done", sn < n);
   });
   $("#btnPrev").disabled = n === 1;
+  $("#btnNext").disabled = n === TOTAL_STEPS;
   $("#btnNext").textContent = n === TOTAL_STEPS ? I18N.t("buttons.finish") : I18N.t("buttons.next");
   $("#progressBar").style.width = (n / TOTAL_STEPS * 100) + "%";
 
-  if (n === 4) renderContract();
+  if (n === 4) renderContractPreview();
   if (n === 5) setTimeout(resizeCanvases, 50);
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -181,96 +169,114 @@ function recalcPayment() {
   $("#remainingAmount").value = formatMoney(remaining, cur);
 }
 
-/* -------- Prevailing language UI -------- */
-function updatePrevailingConfirm() {
-  const lang = getPrevailingLanguage();
-  const el = document.getElementById("prevailingConfirm");
-  if (!el) return;
-  el.textContent = I18N.t(lang === "en" ? "step5.prevailing.confirmEn" : "step5.prevailing.confirmEs");
-  el.dataset.i18n = lang === "en" ? "step5.prevailing.confirmEn" : "step5.prevailing.confirmEs";
-}
+/* -------- Contract rendering (monolingüe) --------
+   Genera HTML del contrato en un solo idioma, con cada cláusula como
+   .clause-block separada para que html2pdf respete page-breaks.
+*/
+function renderContractHtml(locale, d, options = {}) {
+  const clauses = locale === "en" ? (window.CLAUSES_EN || []) : (window.CLAUSES_ES || []);
+  const dateLocale = locale === "en" ? "en-US" : "es-ES";
+  const today = new Date().toLocaleDateString(dateLocale, { year: "numeric", month: "long", day: "numeric" });
 
-/* -------- Contract rendering (bilingual) -------- */
-function renderContract() {
-  const d = collectData();
-  const todayEs = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
-  const todayEn = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const labels = locale === "en"
+    ? {
+        title: "Digital Services Agreement",
+        sub: `Document generated on ${today}`,
+        disclaimerH: "Legal Notice",
+        disclaimer: "This contract has been prepared with best efforts to reflect industry-standard rights and obligations. For contracts exceeding $15,000 USD or regulated industries (healthcare, fintech, government), legal review in the applicable jurisdiction is strongly recommended before signing.",
+        clientLine: "Client",
+        providerLine: "Provider",
+        sigClient: "Client Signature",
+        sigProvider: "Provider Signature",
+      }
+    : {
+        title: "Contrato de Prestación de Servicios Digitales",
+        sub: `Documento generado el ${today}`,
+        disclaimerH: "Aviso legal",
+        disclaimer: "Este contrato ha sido preparado con el mejor esfuerzo para reflejar derechos y obligaciones estándar de la industria. Para contratos superiores a $15,000 USD o industrias reguladas (salud, fintech, gobierno), se recomienda firmemente la revisión legal en la jurisdicción aplicable antes de firmar.",
+        clientLine: "Cliente",
+        providerLine: "Proveedor",
+        sigClient: "Firma del Cliente",
+        sigProvider: "Firma del Proveedor",
+      };
 
-  const esClauses = window.CLAUSES_ES || [];
-  const enClauses = window.CLAUSES_EN || [];
+  // Inyectar override de helpers para que las cláusulas formateen fechas/montos
+  // en el locale del PDF, no en el del toggle UI
+  const prevAI = window.AI;
+  const localizedAI = {
+    ...prevAI,
+    formatDate: (date) => formatDate(date, locale),
+    formatMoney: (n, cur) => formatMoney(n, cur, locale),
+    listify: (text) => {
+      const items = (text || "").split("\n").map((t) => t.trim()).filter(Boolean);
+      if (!items.length) return `<li><em>${locale === "en" ? "Not defined" : "Sin definir"}</em></li>`;
+      return items.map((i) => `<li>${esc(i)}</li>`).join("");
+    },
+  };
+  window.AI = localizedAI;
 
   let html = `
-    <div class="document-bilingual-header">
-      <div class="dbh-col">
-        <h1>Contrato de Prestación de Servicios Digitales</h1>
-        <p class="doc-sub">Documento generado el ${todayEs}</p>
-      </div>
-      <div class="dbh-col">
-        <h1>Digital Services Agreement</h1>
-        <p class="doc-sub">Document generated on ${todayEn}</p>
-      </div>
-    </div>
-    <div class="contract-bilingual">
+    <div class="contract-doc" lang="${locale}">
+      <header class="doc-header">
+        <h1>${esc(labels.title)}</h1>
+        <p class="doc-sub">${esc(labels.sub)}</p>
+      </header>
+      <div class="contract-body">
   `;
 
-  const len = Math.max(esClauses.length, enClauses.length);
-  for (let i = 0; i < len; i++) {
-    const es = esClauses[i] || { number: "", title: "", render: () => "" };
-    const en = enClauses[i] || { number: "", title: "", render: () => "" };
-    const cls = es.isHighlighted || en.isHighlighted ? "clause-row clause-highlighted" : "clause-row";
+  for (const cl of clauses) {
+    const cls = cl.isHighlighted ? "clause-block clause-highlighted" : "clause-block";
+    let body = "";
+    try { body = cl.render(d) || ""; } catch (err) { body = ""; }
     html += `
-      <div class="${cls}">
-        <div class="col col-es" lang="es">
-          <h2>${esc(es.number)}. ${esc(es.title)}</h2>
-          ${es.render(d)}
-        </div>
-        <div class="col col-en" lang="en">
-          <h2>${esc(en.number)}. ${esc(en.title)}</h2>
-          ${en.render(d)}
-        </div>
-      </div>`;
+      <section class="${cls}">
+        <h2>${esc(cl.number)}. ${esc(cl.title)}</h2>
+        ${body}
+      </section>`;
   }
-  html += `</div>`;
 
-  // Disclaimer legal bilingüe
+  // Disclaimer
   html += `
-    <div class="contract-disclaimer clause-row">
-      <div class="col col-es" lang="es">
-        <h3>Aviso legal</h3>
-        <p>Este contrato bilingüe ha sido preparado con el mejor esfuerzo para reflejar los mismos derechos y obligaciones en ambos idiomas. Para contratos superiores a $15,000 USD o industrias reguladas (salud, fintech, gobierno), se recomienda firmemente la revisión legal en la jurisdicción aplicable antes de firmar.</p>
-      </div>
-      <div class="col col-en" lang="en">
-        <h3>Legal Notice</h3>
-        <p>This bilingual contract has been prepared with best efforts to reflect the same rights and obligations in both languages. For contracts exceeding $15,000 USD or regulated industries (healthcare, fintech, government), legal review in the applicable jurisdiction is strongly recommended before signing.</p>
-      </div>
-    </div>
-  `;
+      <section class="clause-block clause-disclaimer">
+        <h3>${esc(labels.disclaimerH)}</h3>
+        <p>${esc(labels.disclaimer)}</p>
+      </section>`;
 
-  // Bloque de firmas (bilingüe)
-  html += renderSignatureBlock(d);
+  // Bloque de firmas
+  const sigClientSrc = (options.includeSignatures && sigClientPad && !sigClientPad.isEmpty()) ? sigClientPad.toDataURL("image/png") : null;
+  const sigProviderSrc = (options.includeSignatures && sigProviderPad && !sigProviderPad.isEmpty()) ? sigProviderPad.toDataURL("image/png") : null;
+  const clientSigName = esc(d.signatures.clientName || d.client.name) || labels.clientLine;
+  const providerSigName = esc(d.signatures.providerName || d.provider.name) || labels.providerLine;
 
-  $("#contractDoc").innerHTML = html;
+  html += `
+      <section class="signature-block">
+        <div class="sign-row">
+          <div class="sign-box">
+            ${sigClientSrc ? `<img src="${sigClientSrc}" alt="${esc(labels.sigClient)}" />` : `<div class="sign-line"></div>`}
+            <p class="sig-name"><strong>${clientSigName}</strong></p>
+            <p class="sig-role">${esc(labels.clientLine)}</p>
+          </div>
+          <div class="sign-box">
+            ${sigProviderSrc ? `<img src="${sigProviderSrc}" alt="${esc(labels.sigProvider)}" />` : `<div class="sign-line"></div>`}
+            <p class="sig-name"><strong>${providerSigName}</strong></p>
+            <p class="sig-role">${esc(labels.providerLine)}</p>
+          </div>
+        </div>
+      </section>`;
+
+  html += `
+      </div>
+    </div>`;
+
+  // Restaurar helpers
+  window.AI = prevAI;
+  return html;
 }
 
-function renderSignatureBlock(d) {
-  const clientNameEs = esc(d.signatures.clientName || d.client.name) || "Firma del Cliente";
-  const clientNameEn = esc(d.signatures.clientName || d.client.name) || "Client Signature";
-  const providerNameEs = esc(d.signatures.providerName || d.provider.name) || "Firma del Proveedor";
-  const providerNameEn = esc(d.signatures.providerName || d.provider.name) || "Provider Signature";
-  return `
-    <div class="sign-row">
-      <div class="sign-box" id="sigBoxClient">
-        <div class="sign-line"></div>
-        <p><strong>${clientNameEs}</strong></p>
-        <p>Cliente / Client</p>
-      </div>
-      <div class="sign-box" id="sigBoxProvider">
-        <div class="sign-line"></div>
-        <p><strong>${providerNameEs}</strong></p>
-        <p>Proveedor / Provider</p>
-      </div>
-    </div>
-  `;
+/* Preview en step 4 — usa I18N.locale (sigue el toggle UI) */
+function renderContractPreview() {
+  const d = collectData();
+  $("#contractDoc").innerHTML = renderContractHtml(I18N.locale, d, { includeSignatures: false });
 }
 
 /* -------- Signatures -------- */
@@ -304,91 +310,55 @@ function initSignatures() {
   });
 }
 
-/* -------- PDF generation (A4 landscape, bilingual) -------- */
-async function downloadPDF() {
+/* -------- PDF generation (US Legal portrait, monolingüe) -------- */
+async function downloadPDF(locale) {
+  if (typeof html2pdf === "undefined") {
+    toast(I18N.t("toast.libsMissing"), "error");
+    return;
+  }
   try {
-    if (typeof html2canvas === "undefined" || !window.jspdf) {
-      toast(I18N.t("toast.libsMissing"), "error");
-      return;
-    }
-
     toast(I18N.t("toast.generating"));
     const d = collectData();
+    const html = renderContractHtml(locale, d, { includeSignatures: true });
 
-    // Re-render contract to capture latest data + prevailing language
-    renderContract();
-
-    const original = $("#contractDoc");
-    const clone = original.cloneNode(true);
-    clone.id = "contractDocClone";
-
-    // Inject signatures into the clone
-    if (sigClientPad && !sigClientPad.isEmpty()) {
-      const img = sigClientPad.toDataURL("image/png");
-      const box = clone.querySelector("#sigBoxClient");
-      if (box) box.innerHTML =
-        `<img src="${img}" alt="Firma del Cliente / Client Signature" style="max-width:100%;max-height:90px;margin-bottom:6px;" />` +
-        `<p style="margin:2px 0;font-size:13px;"><strong>${esc(d.signatures.clientName || d.client.name) || "Cliente / Client"}</strong></p>` +
-        `<p style="margin:2px 0;font-size:12px;color:#475569;">Cliente / Client</p>`;
-    }
-    if (sigProviderPad && !sigProviderPad.isEmpty()) {
-      const img = sigProviderPad.toDataURL("image/png");
-      const box = clone.querySelector("#sigBoxProvider");
-      if (box) box.innerHTML =
-        `<img src="${img}" alt="Firma del Proveedor / Provider Signature" style="max-width:100%;max-height:90px;margin-bottom:6px;" />` +
-        `<p style="margin:2px 0;font-size:13px;"><strong>${esc(d.signatures.providerName || d.provider.name) || "Proveedor / Provider"}</strong></p>` +
-        `<p style="margin:2px 0;font-size:12px;color:#475569;">Proveedor / Provider</p>`;
-    }
-
-    // Off-screen wrapper sized for landscape (wider for 2 columns)
-    const RENDER_WIDTH = 1100; // px — buena resolución para 297mm landscape
+    // Wrapper invisible (off-screen) con ancho fijo en px que se aproxime al
+    // ancho del contenido en pt (Legal portrait ≈ 612 - margen ≈ 552pt).
+    // Usamos 800px de render para buena resolución y luego html2pdf escala.
     const holder = document.createElement("div");
-    holder.style.cssText = `position:fixed;left:-12000px;top:0;width:${RENDER_WIDTH}px;background:#ffffff;z-index:-1;`;
-    clone.style.cssText = "padding:24px 28px;background:#ffffff;color:#0f172a;font-size:12px;";
-    holder.appendChild(clone);
+    holder.style.cssText = "position:fixed;left:-12000px;top:0;width:800px;background:#ffffff;color:#0f172a;z-index:-1;";
+    holder.innerHTML = html;
     document.body.appendChild(holder);
 
-    // Wait for signature images to load
-    const imgs = [...clone.querySelectorAll("img")];
+    // Esperar imágenes (firmas) si hay
+    const imgs = [...holder.querySelectorAll("img")];
     await Promise.all(imgs.map((img) => img.complete ? Promise.resolve() :
       new Promise((res) => { img.onload = img.onerror = res; })));
 
-    const canvas = await html2canvas(clone, {
-      scale: 1.5,
-      backgroundColor: "#ffffff",
-      useCORS: true,
-      logging: false,
-      windowWidth: RENDER_WIDTH,
-    });
+    const safeName = (d.project.name || d.client.name || "contract").replace(/[^\w\-]+/g, "_");
+    const filename = `Contract_${safeName}_${locale === "en" ? "EN" : "ES"}.pdf`;
+
+    await html2pdf()
+      .from(holder.firstElementChild)
+      .set({
+        margin:   [25, 20, 25, 20], // top, left, bottom, right (mm)
+        filename,
+        image:    { type: "jpeg", quality: 0.95 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          logging: false,
+          windowWidth: 800,
+        },
+        jsPDF:    { unit: "mm", format: "legal", orientation: "portrait", compress: true },
+        pagebreak:{
+          mode:  ["css", "legacy", "avoid-all"],
+          avoid: [".clause-block", ".signature-block", "section", "h2", "h3", "ul", ".sign-row"],
+        },
+      })
+      .save();
 
     document.body.removeChild(holder);
-
-    // JPEG quality 0.92 — clave para mantener el PDF en tamaño razonable
-    // (PNG sin compresión sobre 2 columnas largas = 50MB+)
-    const imgData = canvas.toDataURL("image/jpeg", 0.92);
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "landscape", compress: true });
-    const pageW = pdf.internal.pageSize.getWidth();   // 297
-    const pageH = pdf.internal.pageSize.getHeight();  // 210
-    const margin = 8;
-    const imgW = pageW - margin * 2;
-    const imgH = canvas.height * imgW / canvas.width;
-
-    let heightLeft = imgH;
-    let position = margin;
-
-    pdf.addImage(imgData, "JPEG", margin, position, imgW, imgH, undefined, "FAST");
-    heightLeft -= (pageH - margin * 2);
-
-    while (heightLeft > 0) {
-      position = margin - (imgH - heightLeft);
-      pdf.addPage();
-      pdf.addImage(imgData, "JPEG", margin, position, imgW, imgH, undefined, "FAST");
-      heightLeft -= (pageH - margin * 2);
-    }
-
-    const safeName = (d.project.name || d.client.name || "contract").replace(/[^\w\-]+/g, "_");
-    pdf.save(`Contract_${safeName}_Bilingual.pdf`);
     toast(I18N.t("toast.pdfDownloaded"), "success");
   } catch (err) {
     console.error("Error generando PDF:", err);
@@ -412,7 +382,7 @@ function initTheme() {
   });
 }
 
-/* -------- Language toggle -------- */
+/* -------- Language toggle (UI) -------- */
 function initLangToggle() {
   const btn = $("#btnLang");
   const code = $("#langCode");
@@ -426,11 +396,10 @@ function initLangToggle() {
     const next = I18N.locale === "es" ? "en" : "es";
     I18N.setLocale(next);
     updateBadge();
-    // Re-render contract preview with new locale (dates/money formatting)
-    if (currentStep === 4) renderContract();
-    // Update Next button label and prevailing confirm
+    // Re-renderiza preview del contrato con el nuevo locale UI
+    if (currentStep === 4) renderContractPreview();
+    // Update Next button label
     $("#btnNext").textContent = currentStep === TOTAL_STEPS ? I18N.t("buttons.finish") : I18N.t("buttons.next");
-    updatePrevailingConfirm();
   });
 
   updateBadge();
@@ -448,11 +417,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   initSignatures();
 
   $("#btnNext").addEventListener("click", () => {
+    if (currentStep === TOTAL_STEPS) return; // step 5 ya no auto-descarga
     if (!validateStep(currentStep)) return;
-    if (currentStep === TOTAL_STEPS) {
-      downloadPDF();
-      return;
-    }
     goToStep(currentStep + 1);
   });
   $("#btnPrev").addEventListener("click", () => goToStep(currentStep - 1));
@@ -465,20 +431,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById(id).addEventListener("input", recalcPayment);
   });
 
-  // Prevailing language radios
-  document.querySelectorAll('input[name="prevailing"]').forEach((r) => {
-    r.addEventListener("change", () => {
-      updatePrevailingConfirm();
-      if (currentStep === 4) renderContract();
-    });
-  });
-
   $("#btnSave").addEventListener("click", saveDraft);
-  $("#btnDownload").addEventListener("click", downloadPDF);
+  $("#btnDownloadEs").addEventListener("click", () => downloadPDF("es"));
+  $("#btnDownloadEn").addEventListener("click", () => downloadPDF("en"));
 
   goToStep(1);
   recalcPayment();
-  updatePrevailingConfirm();
 });
 
 /* -------- Service Worker -------- */
