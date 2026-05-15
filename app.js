@@ -170,9 +170,214 @@ function recalcPayment() {
 }
 
 /* -------- Contract rendering (monolingüe) --------
-   Genera HTML del contrato en un solo idioma, con cada cláusula como
-   .clause-block separada para que html2pdf respete page-breaks.
+   Genera HTML del contrato en un solo idioma. Cada cláusula es .clause-block
+   con page-break-inside: avoid para que html2pdf no parta cláusulas.
+
+   IMPORTANTE: el HTML incluye un <style> inline con HEX absolutos. NO usar
+   var(--*) porque html2canvas clona el elemento en un iframe interno donde
+   las CSS variables del documento padre no se heredan, y el texto sale
+   invisible.
 */
+function renderContractStyles() {
+  // Estilos autocontenidos para el PDF — todos los colores HEX absolutos.
+  return `
+    .pdf-contract {
+      color: #0f172a;
+      background: #ffffff;
+      font-family: "Times New Roman", Times, "Liberation Serif", serif;
+      font-size: 11.5pt;
+      line-height: 1.5;
+      padding: 0;
+    }
+    .pdf-contract * { box-sizing: border-box; }
+    .pdf-contract .doc-header {
+      text-align: center;
+      padding-bottom: 14pt;
+      margin-bottom: 16pt;
+      border-bottom: 1.5px solid #94a3b8;
+    }
+    .pdf-contract .doc-header h1 {
+      margin: 0 0 6pt;
+      font-size: 18pt;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+    }
+    .pdf-contract .doc-header .doc-sub {
+      margin: 0;
+      font-size: 10pt;
+      color: #475569;
+      font-style: italic;
+    }
+    .pdf-contract .contract-body {
+      display: block;
+    }
+    .pdf-contract .clause-block {
+      page-break-inside: avoid;
+      break-inside: avoid;
+      margin: 0 0 12pt;
+      padding: 0;
+      color: #0f172a;
+    }
+    .pdf-contract .clause-block h2 {
+      margin: 0 0 6pt;
+      font-size: 12pt;
+      font-weight: 700;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      font-family: "Times New Roman", Times, serif;
+    }
+    .pdf-contract .clause-block h3 {
+      margin: 0 0 4pt;
+      font-size: 10pt;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .pdf-contract .clause-block p {
+      margin: 0 0 6pt;
+      font-size: 11pt;
+      line-height: 1.55;
+      color: #1e293b;
+      text-align: justify;
+    }
+    .pdf-contract .clause-block ul {
+      margin: 4pt 0 8pt 18pt;
+      padding: 0;
+    }
+    .pdf-contract .clause-block li {
+      margin: 0 0 3pt;
+      font-size: 11pt;
+      line-height: 1.5;
+      color: #1e293b;
+    }
+    .pdf-contract .clause-block strong {
+      color: #0f172a;
+      font-weight: 700;
+    }
+    .pdf-contract .clause-block em {
+      font-style: italic;
+      color: #475569;
+    }
+    .pdf-contract .clause-block .parties {
+      display: table;
+      width: 100%;
+      margin: 6pt 0 8pt;
+      border-collapse: separate;
+      border-spacing: 8pt 0;
+    }
+    .pdf-contract .clause-block .party {
+      display: table-cell;
+      width: 50%;
+      padding: 8pt 10pt;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      vertical-align: top;
+    }
+    .pdf-contract .clause-block .party h3 {
+      margin: 0 0 4pt;
+      font-size: 9pt;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+    }
+    .pdf-contract .clause-block .party p {
+      margin: 1pt 0;
+      font-size: 10.5pt;
+      color: #1e293b;
+      text-align: left;
+    }
+    .pdf-contract .clause-block .highlight {
+      margin: 6pt 0;
+      padding: 8pt 12pt;
+      background: #f1f5f9;
+      border-left: 3px solid #475569;
+    }
+    .pdf-contract .clause-block .highlight p {
+      margin: 2pt 0;
+    }
+    .pdf-contract .clause-highlighted {
+      margin: 10pt 0;
+      padding: 10pt 12pt;
+      background: #fef9c3;
+      border: 1.5px solid #ca8a04;
+    }
+    .pdf-contract .clause-highlighted h2 {
+      color: #713f12;
+    }
+    .pdf-contract .clause-highlighted p {
+      font-weight: 600;
+      font-size: 10.5pt;
+      color: #422006;
+    }
+    .pdf-contract .clause-disclaimer {
+      margin-top: 14pt;
+      padding: 8pt 12pt;
+      background: #f8fafc;
+      border-left: 3px solid #94a3b8;
+    }
+    .pdf-contract .clause-disclaimer h3 {
+      margin: 0 0 4pt;
+      font-size: 9pt;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .pdf-contract .clause-disclaimer p {
+      margin: 0;
+      font-size: 9.5pt;
+      color: #475569;
+      line-height: 1.5;
+      font-style: italic;
+    }
+    .pdf-contract .signature-block {
+      page-break-inside: avoid;
+      break-inside: avoid;
+      margin-top: 24pt;
+      padding-top: 16pt;
+      border-top: 1.5px solid #94a3b8;
+    }
+    .pdf-contract .signature-block .sign-row {
+      display: table;
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 24pt 0;
+    }
+    .pdf-contract .signature-block .sign-box {
+      display: table-cell;
+      width: 50%;
+      text-align: center;
+      vertical-align: bottom;
+    }
+    .pdf-contract .signature-block .sign-box img {
+      display: block;
+      max-width: 100%;
+      max-height: 70pt;
+      margin: 0 auto 4pt;
+    }
+    .pdf-contract .signature-block .sign-line {
+      border-top: 1px solid #475569;
+      margin: 40pt 12pt 4pt;
+    }
+    .pdf-contract .signature-block .sig-name {
+      margin: 2pt 0 0;
+      font-size: 11pt;
+      color: #0f172a;
+      font-weight: 700;
+    }
+    .pdf-contract .signature-block .sig-role {
+      margin: 1pt 0 0;
+      font-size: 9.5pt;
+      color: #475569;
+      font-style: italic;
+    }
+  `;
+}
+
 function renderContractHtml(locale, d, options = {}) {
   const clauses = locale === "en" ? (window.CLAUSES_EN || []) : (window.CLAUSES_ES || []);
   const dateLocale = locale === "en" ? "en-US" : "es-ES";
@@ -215,8 +420,12 @@ function renderContractHtml(locale, d, options = {}) {
   };
   window.AI = localizedAI;
 
+  // CRITICAL: <style> block INLINE dentro del wrapper. html2pdf clona el holder
+  // en un iframe interno donde los estilos del <head> del documento padre NO se
+  // transfieren — solo los <style> que están adentro del clone.
   let html = `
-    <div class="contract-doc" lang="${locale}">
+    <style>${renderContractStyles()}</style>
+    <div class="pdf-contract" lang="${locale}">
       <header class="doc-header">
         <h1>${esc(labels.title)}</h1>
         <p class="doc-sub">${esc(labels.sub)}</p>
@@ -310,26 +519,41 @@ function initSignatures() {
   });
 }
 
-/* -------- PDF generation (US Legal portrait, monolingüe) -------- */
+/* -------- PDF generation (US Legal portrait, monolingüe) --------
+   Estrategia (críticas):
+   1. La clase del wrapper (.pdf-contract) es ÚNICA — no colisiona con
+      reglas legacy de .contract-doc en styles.css.
+   2. El <style> con todas las reglas se inyecta INLINE al inicio del
+      HTML que va al holder. html2pdf clona el holder en un iframe
+      interno y los estilos del <head> del documento padre NO se
+      transfieren — solo los <style> que están dentro del clone.
+   3. Holder con position:fixed; left:-12000px (off-screen horizontal):
+      el browser sí pinta y html2canvas captura, sin afectar al usuario.
+*/
 async function downloadPDF(locale) {
   if (typeof html2pdf === "undefined") {
     toast(I18N.t("toast.libsMissing"), "error");
     return;
   }
+  let holder = null;
   try {
     toast(I18N.t("toast.generating"));
     const d = collectData();
     const html = renderContractHtml(locale, d, { includeSignatures: true });
 
-    // Wrapper invisible (off-screen) con ancho fijo en px que se aproxime al
-    // ancho del contenido en pt (Legal portrait ≈ 612 - margen ≈ 552pt).
-    // Usamos 800px de render para buena resolución y luego html2pdf escala.
-    const holder = document.createElement("div");
-    holder.style.cssText = "position:fixed;left:-12000px;top:0;width:800px;background:#ffffff;color:#0f172a;z-index:-1;";
+    const RENDER_WIDTH_PX = 720;
+
+    holder = document.createElement("div");
+    holder.id = "pdfRenderHolder";
+    // Off-screen (left:-12000) — esta config sí genera contenido en producción.
+    // El offset horizontal residual del rasterizado se compensa con padding-left
+    // dinámico en el wrapper (ver style cssText abajo).
+    holder.style.cssText = "position:fixed;left:-12000px;top:0;width:" + RENDER_WIDTH_PX + "px;background:#ffffff;color:#0f172a;font-size:12px;padding:0;margin:0;z-index:-1;";
     holder.innerHTML = html;
     document.body.appendChild(holder);
 
-    // Esperar imágenes (firmas) si hay
+    // Asegurar layout
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     const imgs = [...holder.querySelectorAll("img")];
     await Promise.all(imgs.map((img) => img.complete ? Promise.resolve() :
       new Promise((res) => { img.onload = img.onerror = res; })));
@@ -338,32 +562,44 @@ async function downloadPDF(locale) {
     const filename = `Contract_${safeName}_${locale === "en" ? "EN" : "ES"}.pdf`;
 
     await html2pdf()
-      .from(holder.firstElementChild)
+      .from(holder)
       .set({
-        margin:   [25, 20, 25, 20], // top, left, bottom, right (mm)
+        margin:   [16, 16, 16, 16], // mm — Legal portrait
         filename,
         image:    { type: "jpeg", quality: 0.95 },
         html2canvas: {
-          scale: 2,
+          scale: 1.5,
           useCORS: true,
           backgroundColor: "#ffffff",
           logging: false,
-          windowWidth: 800,
+          windowWidth: RENDER_WIDTH_PX,
         },
         jsPDF:    { unit: "mm", format: "legal", orientation: "portrait", compress: true },
         pagebreak:{
           mode:  ["css", "legacy", "avoid-all"],
-          avoid: [".clause-block", ".signature-block", "section", "h2", "h3", "ul", ".sign-row"],
+          avoid: [".clause-block", ".signature-block", ".sign-row", ".sign-box", ".clause-disclaimer"],
         },
       })
       .save();
 
-    document.body.removeChild(holder);
     toast(I18N.t("toast.pdfDownloaded"), "success");
   } catch (err) {
     console.error("Error generando PDF:", err);
     toast(I18N.t("toast.pdfError") + ": " + (err.message || ""), "error");
+  } finally {
+    if (holder && holder.parentNode) holder.parentNode.removeChild(holder);
   }
+}
+
+/* Inyecta los estilos del contrato (.pdf-contract) al <head> una sola vez.
+   Necesario para que tanto el PREVIEW del wizard como el PDF compartan
+   la misma apariencia. */
+function injectContractStyles() {
+  if (document.getElementById("contractRenderStyles")) return;
+  const t = document.createElement("style");
+  t.id = "contractRenderStyles";
+  t.textContent = renderContractStyles();
+  document.head.appendChild(t);
 }
 
 /* -------- Theme -------- */
@@ -408,6 +644,7 @@ function initLangToggle() {
 /* -------- Init -------- */
 document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
+  injectContractStyles();
 
   // Cargar traducciones ANTES de cualquier otra cosa que use I18N.t()
   await I18N.init();

@@ -1,5 +1,5 @@
-/* Acuerdo Inteligente · Service Worker (v3 monolingual Legal portrait) */
-const CACHE = "acuerdo-inteligente-v3-legal";
+/* Acuerdo Inteligente · Service Worker (v4 PDF render fix) */
+const CACHE = "acuerdo-inteligente-v4-pdf-fix";
 const ASSETS = [
   "./",
   "./index.html",
