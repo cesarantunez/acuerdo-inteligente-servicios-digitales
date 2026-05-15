@@ -1,12 +1,18 @@
-/* Acuerdo Inteligente · Service Worker */
-const CACHE = "acuerdo-inteligente-v1";
+/* Acuerdo Inteligente · Service Worker (v2 bilingual) */
+const CACHE = "acuerdo-inteligente-v2-bilingual";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
   "./manifest.json",
-  "./icon.svg"
+  "./icon.svg",
+  "./lib/i18n.js",
+  "./lib/messages/es.json",
+  "./lib/messages/en.json",
+  "./lib/legal/glossary.js",
+  "./lib/legal/clauses-es.js",
+  "./lib/legal/clauses-en.js"
 ];
 
 self.addEventListener("install", (e) => {
