@@ -101,7 +101,7 @@
   },
   "step4": {
     "title": "Contract Preview",
-    "subtitle": "Review the bilingual (Spanish and English) document generated automatically."
+    "subtitle": "Review the generated document. You'll be able to download it in Spanish or English on the next step."
   },
   "step5": {
     "title": "Digital Signature",
@@ -110,22 +110,14 @@
     "providerSig": "Provider Signature",
     "sigName": "Signer's name",
     "sigNamePh": "Full name",
-    "prevailing": {
-      "title": "Prevailing Language",
-      "help": "This contract is signed in bilingual format. Please indicate which language shall prevail in case of legal discrepancy between both versions.",
-      "spanish": "Spanish",
-      "spanishHelp": "The Spanish version prevails in disputes",
-      "english": "English",
-      "englishHelp": "The English version prevails in disputes",
-      "confirmEs": "You have selected that the SPANISH version shall prevail.",
-      "confirmEn": "You have selected that the ENGLISH version shall prevail."
-    }
+    "downloadHelp": "Choose the language of the contract to download:"
   },
   "buttons": {
     "next": "Next →",
     "prev": "← Back",
     "finish": "Finish",
-    "downloadPdf": "Download signed PDF",
+    "downloadEs": "Descargar PDF (Español)",
+    "downloadEn": "Download PDF (English)",
     "saveDraft": "Save draft",
     "clear": "Clear"
   },

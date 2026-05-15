@@ -101,7 +101,7 @@
   },
   "step4": {
     "title": "Vista Previa del Contrato",
-    "subtitle": "Revisa el documento bilingüe (español e inglés) generado automáticamente."
+    "subtitle": "Revisa el documento generado. Podrás descargarlo en español o inglés en el siguiente paso."
   },
   "step5": {
     "title": "Firma Digital",
@@ -110,22 +110,14 @@
     "providerSig": "Firma del Proveedor",
     "sigName": "Nombre de quien firma",
     "sigNamePh": "Nombre completo",
-    "prevailing": {
-      "title": "Idioma prevaleciente",
-      "help": "Este contrato se firma en formato bilingüe. Indica qué idioma prevalecerá en caso de discrepancia legal entre ambas versiones.",
-      "spanish": "Español",
-      "spanishHelp": "La versión en español prevalece en disputas",
-      "english": "English",
-      "englishHelp": "The English version prevails in disputes",
-      "confirmEs": "Has seleccionado que la versión en ESPAÑOL prevalecerá.",
-      "confirmEn": "Has seleccionado que la versión en INGLÉS prevalecerá."
-    }
+    "downloadHelp": "Elige el idioma del contrato a descargar:"
   },
   "buttons": {
     "next": "Siguiente →",
     "prev": "← Atrás",
     "finish": "Finalizar",
-    "downloadPdf": "Descargar PDF firmado",
+    "downloadEs": "Descargar PDF (Español)",
+    "downloadEn": "Download PDF (English)",
     "saveDraft": "Guardar borrador",
     "clear": "Limpiar"
   },

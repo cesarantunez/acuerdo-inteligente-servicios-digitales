@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#6366f1" />
-  <meta name="description" content="Genera contratos digitales profesionales bilingües (ES/EN) con firma electrónica" />
+  <meta name="description" content="Genera contratos digitales profesionales en español o inglés (formato US Legal) con firma electrónica" />
   <title>Acuerdo Inteligente · Servicios Digitales</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/svg+xml" href="icon.svg" />
@@ -247,31 +247,6 @@
         <p data-i18n="step5.subtitle">Firma con el dedo (móvil) o mouse (desktop).</p>
       </header>
 
-      <!-- Selector de idioma prevaleciente (decisión legal, distinta del toggle visual) -->
-      <div class="prevailing-selector">
-        <h3 data-i18n="step5.prevailing.title">Idioma prevaleciente</h3>
-        <p data-i18n="step5.prevailing.help">Este contrato se firma en formato bilingüe. Indica qué idioma prevalecerá en caso de discrepancia legal entre ambas versiones.</p>
-        <div class="prevailing-options">
-          <label class="prevailing-option">
-            <input type="radio" name="prevailing" value="es" checked />
-            <div>
-              <div class="po-flag">🇪🇸</div>
-              <div class="po-label" data-i18n="step5.prevailing.spanish">Español</div>
-              <div class="po-help" data-i18n="step5.prevailing.spanishHelp">La versión en español prevalece en disputas</div>
-            </div>
-          </label>
-          <label class="prevailing-option">
-            <input type="radio" name="prevailing" value="en" />
-            <div>
-              <div class="po-flag">🇺🇸</div>
-              <div class="po-label" data-i18n="step5.prevailing.english">English</div>
-              <div class="po-help" data-i18n="step5.prevailing.englishHelp">The English version prevails in disputes</div>
-            </div>
-          </label>
-        </div>
-        <p class="prevailing-confirm" id="prevailingConfirm" data-i18n="step5.prevailing.confirmEs"></p>
-      </div>
-
       <div class="sign-grid">
         <div class="sign-card">
           <h3 data-i18n="step5.clientSig">Firma del Cliente</h3>
@@ -297,15 +272,26 @@
         </div>
       </div>
 
-      <div class="final-actions">
-        <button id="btnDownload" class="btn btn-primary btn-lg">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          <span data-i18n="buttons.downloadPdf">Descargar PDF firmado</span>
-        </button>
+      <div class="download-section">
+        <p class="download-help" data-i18n="step5.downloadHelp">Elige el idioma del contrato a descargar:</p>
+        <div class="final-actions">
+          <button id="btnDownloadEs" class="btn btn-primary btn-lg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span data-i18n="buttons.downloadEs">Descargar PDF (Español)</span>
+          </button>
+          <button id="btnDownloadEn" class="btn btn-primary btn-lg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span data-i18n="buttons.downloadEn">Download PDF (English)</span>
+          </button>
+        </div>
         <button id="btnSave" class="btn btn-ghost" data-i18n="buttons.saveDraft">Guardar borrador</button>
       </div>
     </section>
@@ -324,10 +310,9 @@
   <!-- Toast -->
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <!-- Libraries (CDN) -->
+  <!-- Libraries (CDN) — html2pdf bundle incluye html2canvas + jsPDF + paginación -->
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
 
   <!-- App modules (orden importa: i18n -> glossary -> clauses -> app) -->
   <script src="lib/i18n.js"></script>
