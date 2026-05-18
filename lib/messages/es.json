@@ -80,6 +80,15 @@
     "title": "Condiciones de Pago",
     "subtitle": "Define montos, fechas y método de pago.",
     "currency": "Moneda",
+    "currencies": {
+      "USD": "USD – Dólar estadounidense",
+      "MXN": "MXN – Peso mexicano",
+      "EUR": "EUR – Euro",
+      "COP": "COP – Peso colombiano",
+      "ARS": "ARS – Peso argentino",
+      "CLP": "CLP – Peso chileno",
+      "PEN": "PEN – Sol peruano"
+    },
     "totalPrice": "Precio total *",
     "totalPricePh": "5000",
     "initialPercent": "Porcentaje inicial (%)",
@@ -103,6 +112,10 @@
     "title": "Vista Previa del Contrato",
     "subtitle": "Revisa el documento generado. Podrás descargarlo en español o inglés en el siguiente paso."
   },
+  "doc": {
+    "title": "Acuerdo Inteligente · Servicios Digitales",
+    "description": "Genera contratos digitales profesionales en español o inglés (formato US Legal) con firma electrónica"
+  },
   "step5": {
     "title": "Firma Digital",
     "subtitle": "Firma con el dedo (móvil) o mouse (desktop).",
@@ -125,15 +138,18 @@
     "draftSaved": "Borrador guardado",
     "draftFailed": "No se pudo guardar",
     "fillRequired": "Completa los campos obligatorios",
+    "invalidEmail": "El correo electrónico no es válido",
     "selectProject": "Selecciona el tipo de proyecto",
     "describeProject": "Describe el proyecto",
     "addFeature": "Agrega al menos una funcionalidad",
     "enterPrice": "Ingresa el precio total",
+    "invalidPrice": "El precio total debe ser mayor a cero",
     "selectPayment": "Selecciona método de pago",
     "generating": "Generando PDF...",
     "pdfDownloaded": "PDF descargado",
     "pdfError": "Error generando PDF",
-    "libsMissing": "Librerías no cargadas. Revisa tu conexión a internet."
+    "libsMissing": "Librerías no cargadas. Revisa tu conexión a internet.",
+    "needSignatures": "Falta al menos una firma para descargar el contrato"
   },
   "contract": {
     "title": "Contrato de Prestación de Servicios Digitales",
