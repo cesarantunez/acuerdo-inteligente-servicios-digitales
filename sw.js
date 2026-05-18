@@ -1,5 +1,5 @@
-/* Acuerdo Inteligente · Service Worker (v4 PDF render fix) */
-const CACHE = "acuerdo-inteligente-v4-pdf-fix";
+/* Acuerdo Inteligente · Service Worker (v5 i18n labels + validation) */
+const CACHE = "acuerdo-inteligente-v5";
 const ASSETS = [
   "./",
   "./index.html",
@@ -11,6 +11,7 @@ const ASSETS = [
   "./lib/messages/es.json",
   "./lib/messages/en.json",
   "./lib/legal/glossary.js",
+  "./lib/legal/labels.js",
   "./lib/legal/clauses-es.js",
   "./lib/legal/clauses-en.js"
 ];
@@ -30,6 +31,12 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
+  // Solo manejamos recursos de mismo origen — los CDN (signature_pad, html2pdf)
+  // los deja pasar el browser sin interceptar para no romper CORS ni dejar
+  // al usuario con una respuesta vacía cuando el SW falla.
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+
   e.respondWith(
     caches.match(req).then((cached) => {
       const fetchPromise = fetch(req).then((resp) => {

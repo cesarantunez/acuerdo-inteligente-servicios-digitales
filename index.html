@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#6366f1" />
-  <meta name="description" content="Genera contratos digitales profesionales en español o inglés (formato US Legal) con firma electrónica" />
-  <title>Acuerdo Inteligente · Servicios Digitales</title>
+  <meta name="description" data-i18n-content="doc.description" content="Genera contratos digitales profesionales en español o inglés (formato US Legal) con firma electrónica" />
+  <title data-i18n="doc.title">Acuerdo Inteligente · Servicios Digitales</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/svg+xml" href="icon.svg" />
   <link rel="apple-touch-icon" href="icon.svg" />
@@ -27,10 +27,10 @@
       </div>
     </div>
     <div class="header-actions">
-      <button id="btnLang" class="icon-btn lang-btn" data-i18n-aria="header.langAria" title="Switch language">
+      <button id="btnLang" class="icon-btn lang-btn" data-i18n-aria="header.langAria" data-i18n-title="header.langAria" title="Switch language">
         <span id="langCode">EN</span>
       </button>
-      <button id="btnTheme" class="icon-btn" data-i18n-aria="header.themeAria" title="Cambiar tema">
+      <button id="btnTheme" class="icon-btn" data-i18n-aria="header.themeAria" data-i18n-title="header.themeAria" title="Cambiar tema">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="5"/>
           <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
@@ -184,13 +184,13 @@
         <label class="field">
           <span data-i18n="step3.currency">Moneda</span>
           <select id="currency">
-            <option value="USD">USD – Dólar</option>
-            <option value="MXN">MXN – Peso Mexicano</option>
-            <option value="EUR">EUR – Euro</option>
-            <option value="COP">COP – Peso Colombiano</option>
-            <option value="ARS">ARS – Peso Argentino</option>
-            <option value="CLP">CLP – Peso Chileno</option>
-            <option value="PEN">PEN – Sol Peruano</option>
+            <option value="USD" data-i18n="step3.currencies.USD">USD – Dólar estadounidense</option>
+            <option value="MXN" data-i18n="step3.currencies.MXN">MXN – Peso mexicano</option>
+            <option value="EUR" data-i18n="step3.currencies.EUR">EUR – Euro</option>
+            <option value="COP" data-i18n="step3.currencies.COP">COP – Peso colombiano</option>
+            <option value="ARS" data-i18n="step3.currencies.ARS">ARS – Peso argentino</option>
+            <option value="CLP" data-i18n="step3.currencies.CLP">CLP – Peso chileno</option>
+            <option value="PEN" data-i18n="step3.currencies.PEN">PEN – Sol peruano</option>
           </select>
         </label>
         <label class="field">
@@ -229,11 +229,11 @@
       </div>
     </section>
 
-    <!-- STEP 4: CONTRATO (preview bilingual) -->
+    <!-- STEP 4: CONTRATO (preview monolingüe) -->
     <section class="panel" data-panel="4">
       <header class="panel-header">
         <h2 data-i18n="step4.title">Vista Previa del Contrato</h2>
-        <p data-i18n="step4.subtitle">Revisa el documento bilingüe (español e inglés) generado automáticamente.</p>
+        <p data-i18n="step4.subtitle">Revisa el documento generado. Podrás descargarlo en español o inglés en el siguiente paso.</p>
       </header>
       <div class="document-wrap">
         <article id="contractDoc" class="document"></article>
@@ -314,8 +314,9 @@
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
 
-  <!-- App modules (orden importa: i18n -> glossary -> clauses -> app) -->
+  <!-- App modules (orden importa: i18n -> labels -> glossary -> clauses -> app) -->
   <script src="lib/i18n.js"></script>
+  <script src="lib/legal/labels.js"></script>
   <script src="lib/legal/glossary.js"></script>
   <script src="lib/legal/clauses-es.js"></script>
   <script src="lib/legal/clauses-en.js"></script>

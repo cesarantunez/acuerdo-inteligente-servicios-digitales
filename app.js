@@ -138,12 +138,18 @@ function goToStep(n) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function validateStep(n) {
   if (n === 1) {
     const required = ["clientName", "clientEmail", "providerName", "providerEmail"];
     for (const id of required) {
       const el = document.getElementById(id);
       if (!el.value.trim()) { el.focus(); toast(I18N.t("toast.fillRequired"), "error"); return false; }
+    }
+    for (const id of ["clientEmail", "providerEmail"]) {
+      const el = document.getElementById(id);
+      if (!EMAIL_RE.test(el.value.trim())) { el.focus(); toast(I18N.t("toast.invalidEmail"), "error"); return false; }
     }
   }
   if (n === 2) {
@@ -152,7 +158,9 @@ function validateStep(n) {
     if (!$("#projectFeatures").value.trim()) { $("#projectFeatures").focus(); toast(I18N.t("toast.addFeature"), "error"); return false; }
   }
   if (n === 3) {
+    const price = parseFloat($("#totalPrice").value);
     if (!$("#totalPrice").value) { $("#totalPrice").focus(); toast(I18N.t("toast.enterPrice"), "error"); return false; }
+    if (!(price > 0)) { $("#totalPrice").focus(); toast(I18N.t("toast.invalidPrice"), "error"); return false; }
     if (!$("#paymentMethod").value) { $("#paymentMethod").focus(); toast(I18N.t("toast.selectPayment"), "error"); return false; }
   }
   return true;
@@ -160,8 +168,10 @@ function validateStep(n) {
 
 /* -------- Payment calc -------- */
 function recalcPayment() {
-  const total = parseFloat($("#totalPrice").value || 0);
-  const pct = parseFloat($("#initialPercent").value || 0);
+  const totalRaw = parseFloat($("#totalPrice").value);
+  const pctRaw = parseFloat($("#initialPercent").value);
+  const total = isFinite(totalRaw) ? totalRaw : 0;
+  const pct = isFinite(pctRaw) ? Math.min(100, Math.max(0, pctRaw)) : 0;
   const cur = $("#currency").value || "USD";
   const initial = total * (pct / 100);
   const remaining = total - initial;
@@ -505,8 +515,11 @@ function resizeCanvases() {
 
 function initSignatures() {
   if (typeof SignaturePad === "undefined") return;
-  sigClientPad = new SignaturePad($("#sigClient"), { penColor: "#0f172a", backgroundColor: "#ffffff" });
-  sigProviderPad = new SignaturePad($("#sigProvider"), { penColor: "#0f172a", backgroundColor: "#ffffff" });
+  // backgroundColor transparente: el PNG exportado para el PDF queda con
+  // canal alfa, sin caja blanca alrededor del trazo. El canvas en el wizard
+  // sigue blanco gracias al CSS .sig-canvas { background: #fff }.
+  sigClientPad = new SignaturePad($("#sigClient"), { penColor: "#0f172a", backgroundColor: "rgba(0,0,0,0)" });
+  sigProviderPad = new SignaturePad($("#sigProvider"), { penColor: "#0f172a", backgroundColor: "rgba(0,0,0,0)" });
   resizeCanvases();
   window.addEventListener("resize", () => clearTimeout(window.__rt) || (window.__rt = setTimeout(resizeCanvases, 120)));
 
@@ -634,6 +647,8 @@ function initLangToggle() {
     updateBadge();
     // Re-renderiza preview del contrato con el nuevo locale UI
     if (currentStep === 4) renderContractPreview();
+    // Re-formatea cantidades calculadas que dependen del locale
+    recalcPayment();
     // Update Next button label
     $("#btnNext").textContent = currentStep === TOTAL_STEPS ? I18N.t("buttons.finish") : I18N.t("buttons.next");
   });

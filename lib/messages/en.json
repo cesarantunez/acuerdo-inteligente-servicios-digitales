@@ -80,6 +80,15 @@
     "title": "Payment Terms",
     "subtitle": "Set amounts, dates, and payment method.",
     "currency": "Currency",
+    "currencies": {
+      "USD": "USD – US Dollar",
+      "MXN": "MXN – Mexican Peso",
+      "EUR": "EUR – Euro",
+      "COP": "COP – Colombian Peso",
+      "ARS": "ARS – Argentine Peso",
+      "CLP": "CLP – Chilean Peso",
+      "PEN": "PEN – Peruvian Sol"
+    },
     "totalPrice": "Total price *",
     "totalPricePh": "5000",
     "initialPercent": "Initial percentage (%)",
@@ -103,6 +112,10 @@
     "title": "Contract Preview",
     "subtitle": "Review the generated document. You'll be able to download it in Spanish or English on the next step."
   },
+  "doc": {
+    "title": "Smart Agreement · Digital Services",
+    "description": "Generate professional digital contracts in Spanish or English (US Legal format) with electronic signature"
+  },
   "step5": {
     "title": "Digital Signature",
     "subtitle": "Sign with your finger (mobile) or mouse (desktop).",
@@ -125,15 +138,18 @@
     "draftSaved": "Draft saved",
     "draftFailed": "Could not save draft",
     "fillRequired": "Please complete all required fields",
+    "invalidEmail": "Email address is not valid",
     "selectProject": "Select a project type",
     "describeProject": "Describe the project",
     "addFeature": "Add at least one feature",
     "enterPrice": "Enter the total price",
+    "invalidPrice": "Total price must be greater than zero",
     "selectPayment": "Select a payment method",
     "generating": "Generating PDF...",
     "pdfDownloaded": "PDF downloaded",
     "pdfError": "Error generating PDF",
-    "libsMissing": "Libraries not loaded. Check your internet connection."
+    "libsMissing": "Libraries not loaded. Check your internet connection.",
+    "needSignatures": "At least one signature is required to download the contract"
   },
   "contract": {
     "title": "Digital Services Agreement",
