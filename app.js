@@ -533,31 +533,47 @@ function initSignatures() {
 }
 
 /* -------- PDF generation (US Legal portrait, monolingüe) --------
-   ROOT CAUSE del "PDF en blanco / contenido cortado" (verificado con
-   html2pdf 0.10.2 + Chromium 2026):
+   ROOT CAUSES verificados con Puppeteer + html2pdf 0.10.2 (Chromium 2026):
 
-   El método interno html2pdf.toContainer() clona el holder dentro de un
-   wrapper propio cuyo width es FIJO = `pageSize.inner.width` (=
-   page width − margin.left − margin.right) en la unidad del jsPDF.
-   Para Legal portrait con margins [16,14,16,14]mm eso son ~533pt ≈ 710px.
+   A) PDF blanco (canvas h=0):
+      `html2pdf.toContainer()` clona el holder dentro de un overlay propio.
+      Si el holder tiene `position: absolute|fixed`, el clon colapsa a
+      altura 0 → html2canvas devuelve canvas vacío.
+      FIX: holder en `position: static`.
 
-   Si el holder tiene `width: 794px` (u otro valor mayor), se DESBORDA del
-   container interno y el overlay (overflow:hidden) lo CLIPA por ambos
-   lados — resultado: PDF con texto cortado en la izquierda.
+   B) Página 1 casi vacía + cláusulas faltantes (texto truncado):
+      Si el holder vive dentro de un wrapper estrecho con overflow:hidden
+      (ej. wrapper 1×1) y NO tiene width explícito, el holder mide 1px en
+      el DOM y scrollHeight crece a ~17000px (el texto se rompe palabra
+      por palabra). html2pdf usa el clon ese para calcular paginación, lo
+      monta en su container interno (width = pageSize.inner.width ≈ 710px)
+      y el resultado es: primera página con HUGE top margin (porque el
+      bloque .parties con display:table no quepo en lo recalculado y
+      `pagebreak: avoid-all` lo empuja a la página 2), cláusulas finales
+      se truncan o se pierden.
+      FIX: dar al holder un width explícito ≈ pageSize.inner.width
+      (Legal portrait con margin 14mm L/R → 712px). El wrapper externo
+      es invisible (height:0; overflow:hidden) pero suficientemente ancho
+      para no clipar al holder.
 
-   Si el holder tiene `position: absolute|fixed`, el container interno
-   colapsa a altura 0 — resultado: PDF blank (~800 bytes).
+   C) Contenido cortado por la izquierda (commit anterior):
+      Si el holder es 794px y el container interno es 710px, el clon
+      desborda y el overlay (overflow:hidden) clipa. RESUELTO en (B) al
+      hacer coincidir holder width con el container interno.
 
-   Solución (probada con Puppeteer):
-   1. holder en `position: static` (flujo normal).
-   2. SIN width explícito en el holder — hereda el width del container
-      interno (= inner.width), evitando desborde.
-   3. Wrapper externo 1×1 invisible solo para no afectar el layout del
-      wizard mientras el holder vive en el DOM.
-   4. <style> INLINE dentro del holder (html2pdf no hereda <head>).
-   5. document.fonts.ready + 2× rAF + espera de imágenes (firmas dataURL).
-   6. Sanity check de altura mínima.
-   7. Botón deshabilitado durante la generación. */
+   Anatomía final del DOM mientras se genera el PDF:
+     #pdfRenderWrapper  (absolute, top:0, left:0, w:800px, h:0,
+                        overflow:hidden, opacity:0, pointer-events:none)
+       └─ #pdfRenderHolder  (static, width:712px)
+            ├─ <style>...</style>
+            └─ <div class="pdf-contract">...18 cláusulas + firmas</div>
+
+   El wrapper es invisible (h:0). El holder mide 712px (= ancho exacto
+   del container interno de html2pdf). Cuando html2pdf clona, el clon
+   se renderiza idéntico al original y la paginación es correcta. */
+
+const PDF_HOLDER_WIDTH_PX = 712;  // ≈ pageSize.inner.width para Legal + 14mm L/R margin
+const PDF_WRAPPER_WIDTH_PX = 800; // > holder, para no clipar
 
 let __pdfBusy = false;
 
@@ -576,8 +592,8 @@ async function downloadPDF(locale) {
     const d = collectData();
     const html = renderContractHtml(locale, d, { includeSignatures: true });
 
-    // WRAPPER invisible 1×1 (no afecta el layout del wizard mientras
-    // el holder vive en el DOM hasta finalizar la generación).
+    // WRAPPER invisible (height:0, overflow:hidden) pero ancho suficiente
+    // para que el holder de 712px NO sea clipado horizontalmente.
     wrapper = document.createElement("div");
     wrapper.id = "pdfRenderWrapper";
     wrapper.setAttribute("aria-hidden", "true");
@@ -585,21 +601,22 @@ async function downloadPDF(locale) {
       "position:absolute",
       "top:0",
       "left:0",
-      "width:1px",
-      "height:1px",
+      "width:" + PDF_WRAPPER_WIDTH_PX + "px",
+      "height:0",
       "overflow:hidden",
       "opacity:0",
       "pointer-events:none",
     ].join(";") + ";";
 
     // HOLDER:
-    // - position:static (NO usar absolute/fixed: rompe html2pdf → canvas h=0).
-    // - SIN width: el container interno de html2pdf le impone su ancho
-    //   (= pageSize.inner.width), evitando que el contenido se corte.
+    //  - position:static (CRÍTICO: no usar absolute/fixed o canvas sale h=0).
+    //  - width explícito = ancho del container interno de html2pdf, así el
+    //    clon se renderiza idéntico al original y la paginación es correcta.
     const holder = document.createElement("div");
     holder.id = "pdfRenderHolder";
     holder.style.cssText = [
       "position:static",
+      "width:" + PDF_HOLDER_WIDTH_PX + "px",
       "background:#ffffff",
       "color:#0f172a",
       "font-size:12px",
@@ -622,8 +639,9 @@ async function downloadPDF(locale) {
       : new Promise((res) => { img.onload = img.onerror = res; })));
 
     const measuredH = holder.scrollHeight;
-    if (measuredH < 50) {
-      throw new Error("El contenido del contrato no se rasterizó (altura=" + measuredH + "px).");
+    const measuredW = holder.offsetWidth;
+    if (measuredH < 50 || measuredW < 100) {
+      throw new Error("El contenido del contrato no se rasterizó (w=" + measuredW + ", h=" + measuredH + ").");
     }
 
     const safeName = (d.project.name || d.client.name || "contract")
@@ -644,8 +662,6 @@ async function downloadPDF(locale) {
           allowTaint: false,
           backgroundColor: "#ffffff",
           logging: false,
-          // OJO: NO especificar `windowWidth`/`width`/`scrollX` — html2pdf
-          // gestiona el viewport del clon vía su container interno.
         },
         jsPDF: {
           unit: "mm",

@@ -1,5 +1,5 @@
-/* Acuerdo Inteligente · Service Worker (v7 vendor libs + PDF robustez) */
-const CACHE = "acuerdo-inteligente-v7";
+/* Acuerdo Inteligente · Service Worker (v8 holder width fix) */
+const CACHE = "acuerdo-inteligente-v8";
 const ASSETS = [
   "./",
   "./index.html",
