@@ -1,5 +1,5 @@
-/* Acuerdo Inteligente · Service Worker (v5 i18n labels + validation) */
-const CACHE = "acuerdo-inteligente-v5";
+/* Acuerdo Inteligente · Service Worker (v7 vendor libs + PDF robustez) */
+const CACHE = "acuerdo-inteligente-v7";
 const ASSETS = [
   "./",
   "./index.html",
@@ -13,7 +13,9 @@ const ASSETS = [
   "./lib/legal/glossary.js",
   "./lib/legal/labels.js",
   "./lib/legal/clauses-es.js",
-  "./lib/legal/clauses-en.js"
+  "./lib/legal/clauses-en.js",
+  "./lib/vendor/signature_pad.umd.min.js",
+  "./lib/vendor/html2pdf.bundle.min.js"
 ];
 
 self.addEventListener("install", (e) => {

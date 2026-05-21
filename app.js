@@ -533,64 +533,130 @@ function initSignatures() {
 }
 
 /* -------- PDF generation (US Legal portrait, monolingüe) --------
-   Estrategia (críticas):
-   1. La clase del wrapper (.pdf-contract) es ÚNICA — no colisiona con
-      reglas legacy de .contract-doc en styles.css.
-   2. El <style> con todas las reglas se inyecta INLINE al inicio del
-      HTML que va al holder. html2pdf clona el holder en un iframe
-      interno y los estilos del <head> del documento padre NO se
-      transfieren — solo los <style> que están dentro del clone.
-   3. Holder con position:fixed; left:-12000px (off-screen horizontal):
-      el browser sí pinta y html2canvas captura, sin afectar al usuario.
-*/
+   ROOT CAUSE del "PDF en blanco / contenido cortado" (verificado con
+   html2pdf 0.10.2 + Chromium 2026):
+
+   El método interno html2pdf.toContainer() clona el holder dentro de un
+   wrapper propio cuyo width es FIJO = `pageSize.inner.width` (=
+   page width − margin.left − margin.right) en la unidad del jsPDF.
+   Para Legal portrait con margins [16,14,16,14]mm eso son ~533pt ≈ 710px.
+
+   Si el holder tiene `width: 794px` (u otro valor mayor), se DESBORDA del
+   container interno y el overlay (overflow:hidden) lo CLIPA por ambos
+   lados — resultado: PDF con texto cortado en la izquierda.
+
+   Si el holder tiene `position: absolute|fixed`, el container interno
+   colapsa a altura 0 — resultado: PDF blank (~800 bytes).
+
+   Solución (probada con Puppeteer):
+   1. holder en `position: static` (flujo normal).
+   2. SIN width explícito en el holder — hereda el width del container
+      interno (= inner.width), evitando desborde.
+   3. Wrapper externo 1×1 invisible solo para no afectar el layout del
+      wizard mientras el holder vive en el DOM.
+   4. <style> INLINE dentro del holder (html2pdf no hereda <head>).
+   5. document.fonts.ready + 2× rAF + espera de imágenes (firmas dataURL).
+   6. Sanity check de altura mínima.
+   7. Botón deshabilitado durante la generación. */
+
+let __pdfBusy = false;
+
 async function downloadPDF(locale) {
+  if (__pdfBusy) return;
   if (typeof html2pdf === "undefined") {
     toast(I18N.t("toast.libsMissing"), "error");
     return;
   }
-  let holder = null;
+  __pdfBusy = true;
+  setDownloadButtonsBusy(true);
+
+  let wrapper = null;
   try {
     toast(I18N.t("toast.generating"));
     const d = collectData();
     const html = renderContractHtml(locale, d, { includeSignatures: true });
 
-    const RENDER_WIDTH_PX = 720;
+    // WRAPPER invisible 1×1 (no afecta el layout del wizard mientras
+    // el holder vive en el DOM hasta finalizar la generación).
+    wrapper = document.createElement("div");
+    wrapper.id = "pdfRenderWrapper";
+    wrapper.setAttribute("aria-hidden", "true");
+    wrapper.style.cssText = [
+      "position:absolute",
+      "top:0",
+      "left:0",
+      "width:1px",
+      "height:1px",
+      "overflow:hidden",
+      "opacity:0",
+      "pointer-events:none",
+    ].join(";") + ";";
 
-    holder = document.createElement("div");
+    // HOLDER:
+    // - position:static (NO usar absolute/fixed: rompe html2pdf → canvas h=0).
+    // - SIN width: el container interno de html2pdf le impone su ancho
+    //   (= pageSize.inner.width), evitando que el contenido se corte.
+    const holder = document.createElement("div");
     holder.id = "pdfRenderHolder";
-    // Off-screen (left:-12000) — esta config sí genera contenido en producción.
-    // El offset horizontal residual del rasterizado se compensa con padding-left
-    // dinámico en el wrapper (ver style cssText abajo).
-    holder.style.cssText = "position:fixed;left:-12000px;top:0;width:" + RENDER_WIDTH_PX + "px;background:#ffffff;color:#0f172a;font-size:12px;padding:0;margin:0;z-index:-1;";
+    holder.style.cssText = [
+      "position:static",
+      "background:#ffffff",
+      "color:#0f172a",
+      "font-size:12px",
+      "padding:0",
+      "margin:0",
+      "box-sizing:border-box",
+    ].join(";") + ";";
     holder.innerHTML = html;
-    document.body.appendChild(holder);
+    wrapper.appendChild(holder);
+    document.body.appendChild(wrapper);
 
-    // Asegurar layout
+    if (document.fonts && document.fonts.ready) {
+      try { await document.fonts.ready; } catch (_) {}
+    }
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-    const imgs = [...holder.querySelectorAll("img")];
-    await Promise.all(imgs.map((img) => img.complete ? Promise.resolve() :
-      new Promise((res) => { img.onload = img.onerror = res; })));
 
-    const safeName = (d.project.name || d.client.name || "contract").replace(/[^\w\-]+/g, "_");
+    const imgs = [...holder.querySelectorAll("img")];
+    await Promise.all(imgs.map((img) => img.complete && img.naturalWidth > 0
+      ? Promise.resolve()
+      : new Promise((res) => { img.onload = img.onerror = res; })));
+
+    const measuredH = holder.scrollHeight;
+    if (measuredH < 50) {
+      throw new Error("El contenido del contrato no se rasterizó (altura=" + measuredH + "px).");
+    }
+
+    const safeName = (d.project.name || d.client.name || "contract")
+      .replace(/[^\w\-]+/g, "_")
+      .slice(0, 60) || "contract";
     const filename = `Contract_${safeName}_${locale === "en" ? "EN" : "ES"}.pdf`;
 
     await html2pdf()
       .from(holder)
       .set({
-        margin:   [16, 16, 16, 16], // mm — Legal portrait
+        margin: [16, 14, 16, 14], // mm [top, right, bottom, left] — Legal
         filename,
-        image:    { type: "jpeg", quality: 0.95 },
+        enableLinks: false,
+        image: { type: "jpeg", quality: 0.95 },
         html2canvas: {
-          scale: 1.5,
+          scale: 2,
           useCORS: true,
+          allowTaint: false,
           backgroundColor: "#ffffff",
           logging: false,
-          windowWidth: RENDER_WIDTH_PX,
+          // OJO: NO especificar `windowWidth`/`width`/`scrollX` — html2pdf
+          // gestiona el viewport del clon vía su container interno.
         },
-        jsPDF:    { unit: "mm", format: "legal", orientation: "portrait", compress: true },
-        pagebreak:{
-          mode:  ["css", "legacy", "avoid-all"],
-          avoid: [".clause-block", ".signature-block", ".sign-row", ".sign-box", ".clause-disclaimer"],
+        jsPDF: {
+          unit: "mm",
+          format: "legal",
+          orientation: "portrait",
+          compress: true,
+          putOnlyUsedFonts: true,
+        },
+        pagebreak: {
+          mode: ["css", "legacy", "avoid-all"],
+          avoid: [".clause-block", ".signature-block", ".sign-row", ".sign-box", ".clause-disclaimer", "h2", "h3"],
         },
       })
       .save();
@@ -600,8 +666,19 @@ async function downloadPDF(locale) {
     console.error("Error generando PDF:", err);
     toast(I18N.t("toast.pdfError") + ": " + (err.message || ""), "error");
   } finally {
-    if (holder && holder.parentNode) holder.parentNode.removeChild(holder);
+    if (wrapper && wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
+    __pdfBusy = false;
+    setDownloadButtonsBusy(false);
   }
+}
+
+function setDownloadButtonsBusy(busy) {
+  ["#btnDownloadEs", "#btnDownloadEn"].forEach((sel) => {
+    const b = document.querySelector(sel);
+    if (!b) return;
+    b.disabled = !!busy;
+    b.classList.toggle("is-busy", !!busy);
+  });
 }
 
 /* Inyecta los estilos del contrato (.pdf-contract) al <head> una sola vez.
@@ -691,9 +768,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   recalcPayment();
 });
 
-/* -------- Service Worker -------- */
+/* -------- Service Worker --------
+   Se registra al load y escucha actualizaciones. Cuando hay una versión nueva
+   del SW (ej. tras bump de CACHE), avisa con un toast invitando a refrescar
+   para que la app vieja no muestre estilos/PDF obsoletos. */
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
+    navigator.serviceWorker.register("sw.js").then((reg) => {
+      if (!reg) return;
+      reg.addEventListener("updatefound", () => {
+        const sw = reg.installing;
+        if (!sw) return;
+        sw.addEventListener("statechange", () => {
+          if (sw.state === "installed" && navigator.serviceWorker.controller) {
+            try { toast(I18N.t("toast.updateAvailable"), "success"); } catch (_) {}
+          }
+        });
+      });
+    }).catch(() => {});
   });
 }

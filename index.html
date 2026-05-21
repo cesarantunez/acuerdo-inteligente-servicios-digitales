@@ -310,9 +310,10 @@
   <!-- Toast -->
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <!-- Libraries (CDN) — html2pdf bundle incluye html2canvas + jsPDF + paginación -->
-  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+  <!-- Libraries (vendorizadas en lib/vendor/ para offline-first y reproducibilidad)
+       html2pdf bundle incluye html2canvas + jsPDF + paginación -->
+  <script src="lib/vendor/signature_pad.umd.min.js"></script>
+  <script src="lib/vendor/html2pdf.bundle.min.js"></script>
 
   <!-- App modules (orden importa: i18n -> labels -> glossary -> clauses -> app) -->
   <script src="lib/i18n.js"></script>

@@ -347,6 +347,28 @@ input, select, textarea, button { font-family: inherit; font-size: 15px; }
   justify-content: center; margin-top: 28px;
 }
 
+/* Estado "generando PDF" — feedback visual mientras html2pdf trabaja */
+.btn.is-busy {
+  position: relative;
+  opacity: .75;
+  cursor: progress;
+  pointer-events: none;
+}
+.btn.is-busy::after {
+  content: "";
+  width: 14px; height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 6px;
+  animation: btnSpin .8s linear infinite;
+  vertical-align: middle;
+}
+@keyframes btnSpin {
+  to { transform: rotate(360deg); }
+}
+
 /* ===== Toast ===== */
 .toast {
   position: fixed; bottom: 90px; left: 50%;

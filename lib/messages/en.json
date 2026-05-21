@@ -149,7 +149,8 @@
     "pdfDownloaded": "PDF downloaded",
     "pdfError": "Error generating PDF",
     "libsMissing": "Libraries not loaded. Check your internet connection.",
-    "needSignatures": "At least one signature is required to download the contract"
+    "needSignatures": "At least one signature is required to download the contract",
+    "updateAvailable": "New version available — reload the page to see it"
   },
   "contract": {
     "title": "Digital Services Agreement",
