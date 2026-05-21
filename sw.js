@@ -1,5 +1,16 @@
-/* Acuerdo Inteligente · Service Worker (v8 holder width fix) */
-const CACHE = "acuerdo-inteligente-v8";
+/* Acuerdo Inteligente · Service Worker (v9 network-first + auto-update)
+   ESTRATEGIA:
+   - Network-first para mismo-origen: el browser SIEMPRE intenta bajar la
+     última versión del server. Si no hay red, sirve desde caché (offline).
+     Esto evita el problema clásico de PWA "el usuario sigue viendo la
+     versión vieja cacheada después del deploy".
+   - Auto-skipWaiting + clients.claim: cuando se instala una versión
+     nueva del SW, toma control inmediatamente.
+   - Notifica a los clientes con `postMessage("RELOAD")` para que
+     refresquen automáticamente y vean los cambios sin acción del usuario.
+   - Ignora origenes externos (CDNs): los maneja el browser sin SW. */
+
+const CACHE = "acuerdo-inteligente-v9";
 const ASSETS = [
   "./",
   "./index.html",
@@ -19,36 +30,47 @@ const ASSETS = [
 ];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(CACHE)
+      .then((c) => c.addAll(ASSETS))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: "window" }))
+      .then((clients) => {
+        // Avisa a todas las pestañas que recarguen para tomar la versión nueva.
+        clients.forEach((client) => {
+          try { client.postMessage({ type: "SW_UPDATED", cache: CACHE }); } catch (_) {}
+        });
+      })
   );
 });
 
 self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
-  // Solo manejamos recursos de mismo origen — los CDN (signature_pad, html2pdf)
-  // los deja pasar el browser sin interceptar para no romper CORS ni dejar
-  // al usuario con una respuesta vacía cuando el SW falla.
   const url = new URL(req.url);
+
+  // Cross-origin (CDNs): dejar pasar al browser sin interceptar.
   if (url.origin !== self.location.origin) return;
 
+  // Network-first: siempre intentar red primero, caché como fallback offline.
   e.respondWith(
-    caches.match(req).then((cached) => {
-      const fetchPromise = fetch(req).then((resp) => {
+    fetch(req)
+      .then((resp) => {
+        // Cachea respuestas válidas de mismo-origen para offline.
         if (resp && resp.status === 200 && resp.type === "basic") {
           const copy = resp.clone();
           caches.open(CACHE).then((c) => c.put(req, copy));
         }
         return resp;
-      }).catch(() => cached);
-      return cached || fetchPromise;
-    })
+      })
+      .catch(() => caches.match(req).then((cached) => cached || Response.error()))
   );
 });
