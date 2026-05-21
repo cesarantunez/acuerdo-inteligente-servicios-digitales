@@ -149,7 +149,8 @@
     "pdfDownloaded": "PDF descargado",
     "pdfError": "Error generando PDF",
     "libsMissing": "Librerías no cargadas. Revisa tu conexión a internet.",
-    "needSignatures": "Falta al menos una firma para descargar el contrato"
+    "needSignatures": "Falta al menos una firma para descargar el contrato",
+    "updateAvailable": "Hay una versión nueva — recarga la página para verla"
   },
   "contract": {
     "title": "Contrato de Prestación de Servicios Digitales",
