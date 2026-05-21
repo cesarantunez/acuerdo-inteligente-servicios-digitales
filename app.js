@@ -785,13 +785,27 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 /* -------- Service Worker --------
-   Se registra al load y escucha actualizaciones. Cuando hay una versión nueva
-   del SW (ej. tras bump de CACHE), avisa con un toast invitando a refrescar
-   para que la app vieja no muestre estilos/PDF obsoletos. */
-if ("serviceWorker" in navigator) {
+   Se registra al load y escucha actualizaciones. Cuando el SW publica una
+   versión nueva (postMessage "SW_UPDATED" tras activate), la página se
+   recarga 1 sola vez para servir los assets nuevos. Esto evita el bug
+   clásico de PWA donde el usuario seguía viendo el bundle viejo aunque el
+   deploy de Vercel ya tenía el fix. */
+if ("serviceWorker" in navigator && navigator.serviceWorker) {
+  let reloadedForUpdate = false;
+  try {
+    navigator.serviceWorker.addEventListener("message", (event) => {
+      if (event.data && event.data.type === "SW_UPDATED" && !reloadedForUpdate) {
+        reloadedForUpdate = true;
+        // Pequeño delay para no interrumpir si el usuario está dibujando una firma.
+        setTimeout(() => { try { location.reload(); } catch (_) {} }, 300);
+      }
+    });
+  } catch (_) {}
   window.addEventListener("load", () => {
+    if (!navigator.serviceWorker || typeof navigator.serviceWorker.register !== "function") return;
     navigator.serviceWorker.register("sw.js").then((reg) => {
       if (!reg) return;
+      try { reg.update(); } catch (_) {}
       reg.addEventListener("updatefound", () => {
         const sw = reg.installing;
         if (!sw) return;
